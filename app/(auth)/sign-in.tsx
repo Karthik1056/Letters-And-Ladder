@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import AuthForm from '../components/AuthForm';
 import AuthBackground from '../components/AuthBackground';
 import AuthScreenWrapper from '../components/AuthScreenWrapper';
-
+import { login } from '../../Services/AuthService'
 export default function SignIn() {
   const router = useRouter();
 
@@ -17,15 +17,15 @@ export default function SignIn() {
       return;
     }
 
-    // Simulate API call
     try {
-      // Replace with your actual sign-in API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // Alert.alert('Success', 'Signed in successfully!');
-      router.replace('/SelectionPage');
-    } catch (error) {
-      Alert.alert('Sign In Failed', 'Invalid email or password. Please try again.');
+      await login(email, password);
+      Alert.alert('Success', 'Signed in successfully!');
+      router.replace('/SelectionPage'); 
+    } catch (error: any) {
+      Alert.alert('Sign In Failed', error.message);
     }
+
+
   };
 
   return (

@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import AuthForm from '../components/AuthForm';
 import AuthBackground from '../components/AuthBackground';
 import AuthScreenWrapper from '../components/AuthScreenWrapper';
-
+import { signUp } from '../../Services/AuthService';
 export default function SignUp() {
   const router = useRouter();
 
@@ -21,16 +21,15 @@ export default function SignUp() {
       return;
     }
 
-    // Simulate API call
     try {
-      // Replace with your actual sign-up API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // Alert.alert('Success', 'Account created successfully! Please log in.');
-      router.replace('/sign-in');
-    } catch (error) {
-      // You can handle specific errors here, e.g., email already exists
-      Alert.alert('Sign Up Failed', 'Could not create an account. Please try again.');
+      // Call the Firebase Auth service
+      await signUp({ name, email, password });
+      Alert.alert('Success', 'Account created successfully! Please log in.');
+      router.replace('/sign-in'); // navigate to login
+    } catch (error: any) {
+      Alert.alert('Sign Up Failed', error.message);
     }
+
   };
 
   return (

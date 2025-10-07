@@ -8,9 +8,10 @@ export default function AuthLayout() {
         headerShown: false,
       }}
     >
-      <Stack.Screen name="index" options={{}} />
+      {/* <Stack.Screen name="index" options={{}} />
       <Stack.Screen name="sign-in" options={{}} />
-      <Stack.Screen name="sign-up" options={{}} />
+      <Stack.Screen name="sign-up" options={{}} /> */}
+      
     </Stack>
   );
 }

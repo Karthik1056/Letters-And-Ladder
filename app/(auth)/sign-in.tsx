@@ -26,7 +26,7 @@ export default function SignIn() {
       Alert.alert('Success', 'Signed in successfully!');
       router.replace('/'); 
     } catch (error: any) {
-      Alert.alert('Sign In Failed', error.message);
+      Alert.alert('Sign In Failed', 'Invalid email or password.');
     }
   };
 

@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
-import { SplashScreen} from 'expo-router';
+import { SplashScreen } from 'expo-router';
 import "./global.css"
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSharedValue } from 'react-native-reanimated';
+import { AuthProvider } from "../context/AuthContext";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -35,12 +36,14 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }} edges={['right', 'left']}>
-        <Stack>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack>
-      </SafeAreaView>
-    </GestureHandlerRootView>
+    <AuthProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaView style={{ flex: 1 }} edges={['right', 'left']}>
+          <Stack>
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          </Stack>
+        </SafeAreaView>
+      </GestureHandlerRootView>
+    </AuthProvider>
   );
 }

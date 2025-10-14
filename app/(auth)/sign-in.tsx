@@ -1,33 +1,33 @@
 import React from 'react';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../../context/AuthContext'; // ✅ import context
 import AuthForm from '../../components/AuthForm';
 import AuthBackground from '../../components/AuthBackground';
 import AuthScreenWrapper from '../../components/AuthScreenWrapper';
-import { login } from '../../Services/AuthService'
+import { login } from '../../Services/AuthService'; // still needed for manual login
+
 export default function SignIn() {
   const router = useRouter();
+  const { user } = useAuth(); // get context user if needed
 
   const handleSignIn = async (data: any) => {
     const { email, password } = data;
 
-    // Basic validation
     if (!email || !password) {
       Alert.alert('Error', 'Please enter both email and password.');
       return;
     }
 
     try {
-      await login(email, password);
+
+      const loggedInUser = await login(email, password);
+
       Alert.alert('Success', 'Signed in successfully!');
       router.replace('/'); 
     } catch (error: any) {
       Alert.alert('Sign In Failed', error.message);
     }
-
-
-
-
   };
 
   return (

@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontWeight: 'bold', color: '#fff', fontSize: 20 },
   backButton: {
     marginLeft: 16,
-    marginTop: -4, // moves the arrow slightly upward
+    marginTop: -4,
     padding: 6,
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 9999,

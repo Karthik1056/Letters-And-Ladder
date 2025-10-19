@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import AuthForm from '../../components/AuthForm';
 import AuthBackground from '../../components/AuthBackground';
 import AuthScreenWrapper from '../../components/AuthScreenWrapper';
-import { signUp } from '../../Services/AuthService';
+import { signUp } from '../../Services/Auth/AuthService';
 export default function SignUp() {
   const router = useRouter();
 

@@ -6,7 +6,7 @@ import {
   onAuthStateChanged,
   User,
 } from "firebase/auth";
-import { auth, db } from "../firebaseConfig.js";
+import { auth, db } from "../../firebaseConfig.js";
 import { doc, setDoc } from "firebase/firestore";
 
 interface SignUpData {

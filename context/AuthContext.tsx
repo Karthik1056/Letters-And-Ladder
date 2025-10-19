@@ -3,7 +3,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth, db } from "../firebaseConfig";
-import { logout } from "../Services/AuthService";
+import { logout } from "../Services/Auth/AuthService";
 
 interface UserData {
   uid: string;

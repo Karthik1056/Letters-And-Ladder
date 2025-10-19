@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'; // ✅ import context
 import AuthForm from '../../components/AuthForm';
 import AuthBackground from '../../components/AuthBackground';
 import AuthScreenWrapper from '../../components/AuthScreenWrapper';
-import { login } from '../../Services/AuthService'; // still needed for manual login
+import { login } from '../../Services/Auth/AuthService'; // still needed for manual login
 
 export default function SignIn() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function SignIn() {
 
     try {
 
-      const loggedInUser = await login(email, password);
+      await login(email, password);
 
       Alert.alert('Success', 'Signed in successfully!');
       router.replace('/'); 

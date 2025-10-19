@@ -157,7 +157,7 @@ export default function SelectionPage() {
   const handleLearnPress = () => {
     if (isReady) {
       router.push({
-        pathname: '/ChapterList',
+        pathname: './ChapterList',
         params: { board: selectedBoard, class: selectedClass, subject: selectedSubject },
       });
     }
@@ -176,7 +176,7 @@ export default function SelectionPage() {
           headerTintColor: '#fff',
           headerBackground: () => <LinearGradient colors={['#3b82f6', '#60a5fa']} style={styles.headerBackground} />,
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/')} style={styles.backButton}>
+            <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('./')} style={styles.backButton}>
               <Ionicons name="arrow-back" size={22} color="#fff" />
             </TouchableOpacity>
           ),

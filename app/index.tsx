@@ -112,7 +112,7 @@ export default function Index() {
             <LinearGradient colors={['#3b82f6', '#60a5fa']} style={styles.headerBackground} />
           ),
           headerRight: () => (
-            <TouchableOpacity onPress={() => router.push('/profile')} style={styles.profileButton}>
+            <TouchableOpacity onPress={() => router.push('./profile')} style={styles.profileButton}>
               <Ionicons name="person-circle-outline" size={30} color="#fff" />
             </TouchableOpacity>
           ),
@@ -150,7 +150,7 @@ export default function Index() {
       </ScrollView>
 
       <Animated.View style={[styles.buttonWrapper, buttonStyle]}>
-        <TouchableOpacity onPress={() => router.push('/SelectionPage')} onPressIn={() => (buttonScale.value = withSpring(0.98))} onPressOut={() => (buttonScale.value = withSpring(1))} activeOpacity={1}>
+        <TouchableOpacity onPress={() => router.push('./SelectionPage')} onPressIn={() => (buttonScale.value = withSpring(0.98))} onPressOut={() => (buttonScale.value = withSpring(1))} activeOpacity={1}>
           <Animated.View style={[styles.button, { transform: [{ scale: buttonScale.value }] }]}>
             <Text style={styles.buttonText}>Start New Lesson</Text>
           </Animated.View>

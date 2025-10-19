@@ -175,7 +175,7 @@ export default function ChapterListPage() {
                 if (router.canGoBack()) {
                   router.back();
                 } else {
-                  router.replace('/SelectionPage');
+                  router.replace('./SelectionPage');
                 }
               }}
               style={styles.backButton}

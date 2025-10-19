@@ -24,10 +24,10 @@ export default function SignUp() {
     try {
       // Call the Firebase Auth service
       await signUp({ name, email, password });
-      Alert.alert('Success', 'Account created successfully! Please log in.');
-      router.replace('/sign-in'); // navigate to login
+      Alert.alert('Success', 'Account created successfully!.');
+      router.replace('/SelectionPage');
     } catch (error: any) {
-      Alert.alert('Sign Up Failed', error.message);
+      Alert.alert('Sign Up Failed', 'Email already in use.');
     }
 
 
@@ -41,7 +41,7 @@ export default function SignUp() {
           subtitle="We're here to help you reach the peaks of learning. Are you ready?"
           isSignUp={true}
           onSubmit={handleSignUp}
-          onSwitch={() => router.replace('/sign-in')}
+          onSwitch={() => router.replace('/sign-up')}
           switchTextPart1="Already have an account?"
           switchTextPart2="Log In"
           submitText="Get Started"

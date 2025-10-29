@@ -10,6 +10,8 @@ interface UserData {
   email: string;
   name?: string;
   createdAt?: any;
+  state? :string;
+  class ?:string;
 }
 
 interface AuthContextType {
@@ -52,6 +54,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: firebaseUser.email || "",
           name: userSnap.exists() ? userSnap.data().name : undefined,
           createdAt: userSnap.exists() ? userSnap.data().createdAt : undefined,
+          state: userSnap.exists()? userSnap.data().state:undefined,
+          class: userSnap.exists()? userSnap.data().class : undefined,
         };
 
         // Save to state and AsyncStorage

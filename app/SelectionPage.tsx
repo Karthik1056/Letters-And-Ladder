@@ -16,9 +16,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { SelectionGroup } from '../components/SelectionGroup';
-import { fetchBoards,DataMap ,Board} from '@/Services/Boards/Service';
-import { fetchClasses ,Class} from '@/Services/Class/Service';
-import { fetchSubjects,Subject } from '@/Services/Subjects/Service';
+import { fetchBoards, DataMap, Board } from '@/Services/Boards/Service';
+import { fetchClasses, Class } from '@/Services/Class/Service';
+import { fetchSubjects, Subject } from '@/Services/Subjects/Service';
+import { updateUserInfo } from '@/Services/User/UserService';
 
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
@@ -63,34 +64,63 @@ export default function SelectionPage() {
   const [classes, setClasses] = useState<DataMap<Class>>({});
   const [subjects, setSubjects] = useState<DataMap<Subject>>({});
 
-  const [selectedBoard, setSelectedBoard] = useState<string | null>(null);
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  // States to store the DISPLAY NAME (for UI, as requested)
+  const [selectedBoardName, setSelectedBoardName] = useState<string | null>(null);
+  const [selectedClassName, setSelectedClassName] = useState<string | null>(null);
+  const [selectedSubjectName, setSelectedSubjectName] = useState<string | null>(null);
+
+  // States to store the ID (for fetching/DB ops)
+  const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
 
   const [loadingBoards, setLoadingBoards] = useState(true);
   const [loadingClasses, setLoadingClasses] = useState(false);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
 
-  const isReady = selectedBoard && selectedClass && selectedSubject;
+  const isReady = selectedBoardId && selectedClassId && selectedSubjectId;
 
+  // Handler for Board selection
   const handleSelectBoard = (boardId: string) => {
-    setSelectedBoard(boardId);
-    setSelectedClass(null);
-    setSelectedSubject(null);
-    setClasses({});
-    setSubjects({});
+    const board = boards[boardId];
+    if (board) {
+      setSelectedBoardId(boardId);
+      setSelectedBoardName(board.name);
+      
+      // Reset lower selections
+      setSelectedClassId(null);
+      setSelectedClassName(null);
+      setSelectedSubjectId(null);
+      setSelectedSubjectName(null);
+      setClasses({});
+      setSubjects({});
+    }
   };
 
+  // Handler for Class selection
   const handleSelectClass = (classId: string) => {
-    setSelectedClass(classId);
-    setSelectedSubject(null);
-    setSubjects({});
+    const classItem = classes[classId];
+    if (classItem) {
+      setSelectedClassId(classId);
+      setSelectedClassName(classItem.name);
+      
+      // Reset subject selection
+      setSelectedSubjectId(null);
+      setSelectedSubjectName(null);
+      setSubjects({});
+    }
   };
 
+  // Handler for Subject selection
   const handleSelectSubject = (subjectId: string) => {
-    setSelectedSubject(subjectId);
+    const subjectItem = subjects[subjectId];
+    if (subjectItem) {
+      setSelectedSubjectId(subjectId);
+      setSelectedSubjectName(subjectItem.name);
+    }
   };
 
+  // Fetch Boards
   useEffect(() => {
     const loadBoards = async () => {
       setLoadingBoards(true);
@@ -101,33 +131,35 @@ export default function SelectionPage() {
     loadBoards();
   }, []);
 
+  // Fetch Classes (Triggered by selectedBoardId)
   useEffect(() => {
-    if (!selectedBoard) {
+    if (!selectedBoardId) {
       setClasses({});
       return;
     }
     const loadClasses = async () => {
       setLoadingClasses(true);
-      const fetchedClasses = await fetchClasses(selectedBoard);
+      const fetchedClasses = await fetchClasses(selectedBoardId);
       setClasses(fetchedClasses);
       setLoadingClasses(false);
     };
     loadClasses();
-  }, [selectedBoard]);
+  }, [selectedBoardId]);
 
+  // Fetch Subjects (Triggered by selectedClassId)
   useEffect(() => {
-    if (!selectedClass) {
+    if (!selectedClassId) {
       setSubjects({});
       return;
     }
     const loadSubjects = async () => {
       setLoadingSubjects(true);
-      const fetchedSubjects = await fetchSubjects(selectedClass);
+      const fetchedSubjects = await fetchSubjects(selectedClassId);
       setSubjects(fetchedSubjects);
       setLoadingSubjects(false);
     };
     loadSubjects();
-  }, [selectedClass]);
+  }, [selectedClassId]);
 
   const backgroundProgress = useSharedValue(0);
   const buttonScale = useSharedValue(1);
@@ -154,12 +186,31 @@ export default function SelectionPage() {
   const classGroupStyle = useStaggeredAnimation(150);
   const subjectGroupStyle = useStaggeredAnimation(300);
 
-  const handleLearnPress = () => {
+  const handleLearnPress = async () => {
     if (isReady) {
-      router.push({
-        pathname: './ChapterList',
-        params: { board: selectedBoard, class: selectedClass, subject: selectedSubject },
-      });
+      // Data to update in Firestore/AsyncStorage: ID and Name for Board and Class
+      const data = {
+        boardName: selectedBoardName ?? undefined,
+        className: selectedClassName ?? undefined,
+      };
+
+      try {
+        const updatedUser = await updateUserInfo(data);
+        console.log("Updated User Things", updatedUser);
+        
+        // Navigation uses IDs for ChapterList route logic
+        router.push({
+          pathname: './ChapterList',
+          params: { 
+            board: selectedBoardId, 
+            class: selectedClassId, 
+            subject: selectedSubjectId 
+          },
+        });
+      } catch (error) {
+        console.error("Failed to update user selection info:", error);
+        // Optionally show an alert to the user if the update fails
+      }
     }
   };
 
@@ -196,19 +247,23 @@ export default function SelectionPage() {
           <SelectionGroup
             title="Select Your Board"
             items={Object.values(boards).map(b => ({ label: b.name, value: b.id }))}
-            selectedValue={selectedBoard}
+            // Use the Name for display
+            selectedValue={selectedBoardId} 
+            // Pass the ID to the handler
             onSelect={handleSelectBoard}
             iconName="library-outline"
             style={boardGroupStyle}
           />
         )}
 
-        {selectedBoard && (
+        {selectedBoardId && (
           classCount > 0 ? (
             <SelectionGroup
               title="Select Your Class"
               items={Object.values(classes).map(c => ({ label: c.name, value: c.id }))}
-              selectedValue={selectedClass}
+              // Use the Name for display
+              selectedValue={selectedClassId}
+              // Pass the ID to the handler
               onSelect={handleSelectClass}
               iconName="school-outline"
               style={classGroupStyle}
@@ -220,12 +275,14 @@ export default function SelectionPage() {
           )
         )}
 
-        {selectedClass && (
+        {selectedClassId && (
           subjectCount > 0 ? (
             <SelectionGroup
               title="Select Your Subject"
               items={Object.values(subjects).map(s => ({ label: s.name, value: s.id }))}
-              selectedValue={selectedSubject}
+              // Use the Name for display
+              selectedValue={selectedSubjectId}
+              // Pass the ID to the handler
               onSelect={handleSelectSubject}
               iconName="book-outline"
               style={subjectGroupStyle}

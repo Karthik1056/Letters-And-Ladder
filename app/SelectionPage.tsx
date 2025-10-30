@@ -202,9 +202,12 @@ export default function SelectionPage() {
         router.push({
           pathname: './ChapterList',
           params: { 
-            board: selectedBoardId, 
-            class: selectedClassId, 
-            subject: selectedSubjectId 
+            boardId: selectedBoardId, 
+            classId: selectedClassId, 
+            subjectId: selectedSubjectId,
+            boardName: selectedBoardName,
+            className: selectedClassName,
+            subjectName: selectedSubjectName,
           },
         });
       } catch (error) {
@@ -271,7 +274,7 @@ export default function SelectionPage() {
           ) : loadingClasses ? (
               <ActivityIndicator size="small" color="#3b82f6" style={styles.groupLoader} />
           ) : (
-              <Text style={styles.noDataText}>No classes found for this board.</Text>
+              <Text style={styles.noDataText}>Class Coming Soon.</Text>
           )
         )}
 
@@ -290,7 +293,7 @@ export default function SelectionPage() {
           ) : loadingSubjects ? (
               <ActivityIndicator size="small" color="#3b82f6" style={styles.groupLoader} />
           ) : (
-              <Text style={styles.noDataText}>No subjects found for this class.</Text>
+              <Text style={styles.noDataText}>Subject Coming Soon.</Text>
           )
         )}
 
@@ -336,14 +339,13 @@ const styles = StyleSheet.create({
   buttonText: { fontSize: 22, fontWeight: 'bold', color: '#fff', letterSpacing: 0.5 },
   noDataText: { 
     marginTop: 20,
+    width: '100%',
     fontSize: 16,
-    color: '#ef4444', 
+    color: '#475569', // slate-600
     textAlign: 'center',
-    padding: 10,
-    backgroundColor: '#fef2f2',
+    padding: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#fca5a5'
   },
   groupLoader: {
     marginTop: 20,

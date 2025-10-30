@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../../context/AuthContext'; // ✅ import context
+import { useAuth } from '../../context/AuthContext'; // import context
 import AuthForm from '../../components/AuthForm';
 import AuthBackground from '../../components/AuthBackground';
 import AuthScreenWrapper from '../../components/AuthScreenWrapper';
@@ -24,7 +24,7 @@ export default function SignIn() {
       await login(email, password);
 
       Alert.alert('Success', 'Signed in successfully!');
-      router.replace('/'); 
+      router.replace('/MainPage');
     } catch (error: any) {
       Alert.alert('Sign In Failed', 'Invalid email or password.');
     }

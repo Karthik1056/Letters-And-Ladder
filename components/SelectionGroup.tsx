@@ -7,8 +7,9 @@ interface SelectionGroupProps<T extends string> {
   title: string;
   iconName: React.ComponentProps<typeof Ionicons>['name'];
   items: { label: string; value: T }[];
-  selectedValue: T | null;
+  selectedValue: T | T[] | null;
   onSelect: (value: T) => void;
+  allowMultiple?: boolean;
   style?: any;
 }
 
@@ -24,7 +25,6 @@ function SelectItem<T extends string>({ item, isSelected, onPress, index }: Sele
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    // Staggered entrance animation
     scale.value = withDelay(index * 70, withSpring(1, { damping: 12, stiffness: 100 }));
     opacity.value = withDelay(index * 70, withTiming(1, { duration: 300 }));
   }, []);
@@ -41,17 +41,20 @@ function SelectItem<T extends string>({ item, isSelected, onPress, index }: Sele
       <Pressable
         key={item.value}
         onPress={() => onPress(item.value)}
-        className={`bg-white rounded-2xl px-8 py-5 m-2 border-2 shadow-sm 
-          ${isSelected
-            ? 'border-blue-500 bg-blue-50 shadow-lg shadow-blue-200 font-sans' : 'border-gray-300 '}`}
+        className={`bg-white rounded-2xl px-8 py-5 m-2 border-2 shadow-sm ${
+          isSelected
+            ? 'border-blue-500 bg-blue-50 shadow-lg shadow-blue-200'
+            : 'border-gray-300'
+        }`}
         style={({ pressed }) => [
           { marginHorizontal: 8, marginVertical: 6 },
           pressed && { opacity: 0.7, transform: [{ scale: 0.97 }] },
         ]}
       >
         <Text
-          className={`text-lg font-sans text-center ${isSelected ? 'text-blue-700 font-bold' : 'text-gray-900 font-sans'
-            }`}
+          className={`text-lg font-sans text-center ${
+            isSelected ? 'text-blue-700 font-bold' : 'text-gray-900'
+          }`}
         >
           {item.label}
         </Text>
@@ -60,34 +63,55 @@ function SelectItem<T extends string>({ item, isSelected, onPress, index }: Sele
   );
 }
 
-export function SelectionGroup<T extends string>({ title, iconName, items, selectedValue, onSelect, style }: SelectionGroupProps<T>) {
+export function SelectionGroup<T extends string>({
+  title,
+  iconName,
+  items,
+  selectedValue,
+  onSelect,
+  allowMultiple,
+  style,
+}: SelectionGroupProps<T>) {
   const selectedItemScale = useSharedValue(1);
 
-  const animatedSelectedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: selectedItemScale.value }],
-    };
-  });
+  const animatedSelectedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: selectedItemScale.value }],
+  }));
+
   useEffect(() => {
-    selectedItemScale.value = withSpring(selectedValue ? 1.05 : 1, { damping: 10, stiffness: 150 });
-  }, [selectedValue])
+    selectedItemScale.value = withSpring(selectedValue ? 1.05 : 1, {
+      damping: 10,
+      stiffness: 150,
+    });
+  }, [selectedValue]);
 
   return (
-    <Animated.View className="w-full items-center mb-8 bg-white rounded-3xl p-6 shadow-md" style={style}>
-      <View className="flex-row  items-center justify-center mb-6">
+    <Animated.View
+      className="w-full items-center mb-8 bg-white rounded-3xl p-6 shadow-md"
+      style={style}
+    >
+      <View className="flex-row items-center justify-center mb-6">
         <Ionicons name={iconName} size={28} color="#374151" style={{ marginRight: 12 }} />
-        <Text className="text-3xl font-bold text-center text-gray-800 tracking-wide">{title}</Text>
+        <Text className="text-3xl font-bold text-center text-gray-800 tracking-wide">
+          {title}
+        </Text>
       </View>
-      <View className="flex-row flex-wrap justify-center ">
-        {items.map((item, index) => (
-          <SelectItem
-            key={item.value}
-            item={item}
-            isSelected={selectedValue === item.value}
-            onPress={onSelect}
-            index={index}
-          />
-        ))}
+      <View className="flex-row flex-wrap justify-center">
+        {items.map((item, index) => {
+          const isSelected = Array.isArray(selectedValue)
+            ? selectedValue.includes(item.value)
+            : selectedValue === item.value;
+
+          return (
+            <SelectItem
+              key={item.value}
+              item={item}
+              isSelected={isSelected}
+              onPress={onSelect}
+              index={index}
+            />
+          );
+        })}
       </View>
     </Animated.View>
   );

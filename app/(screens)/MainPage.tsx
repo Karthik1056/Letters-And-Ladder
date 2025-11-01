@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import React, { useEffect, useMemo } from 'react'; // React is already imported
+import React, { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -79,24 +80,86 @@ const FloatingShape = ({
   return <Animated.View style={[styles.shapeBase, style, { backgroundColor: color }, animatedStyle]} />;
 };
 
+// --- Subject Card moved into its own component so hooks are not called conditionally in the
+// main component's render loop. This avoids changing the hooks order between renders.
+const SubjectCard = ({
+  subject,
+  index,
+  onPress,
+}: {
+  subject: string;
+  index: number;
+  onPress: (s: string) => void;
+}) => {
+  const cardStyle = useStaggeredAnimation(150 + index * 100, 'bottom');
+
+  return (
+    <Animated.View style={[styles.subjectCard, cardStyle]}>
+      <TouchableOpacity
+        style={styles.touchableCard}
+        activeOpacity={0.8}
+        onPress={() => onPress(subject)}
+      >
+        <View style={styles.cardIconWrapper}>
+          <Ionicons name="book-outline" size={24} color="#3b82f6" />
+        </View>
+        <Text style={styles.subjectTitle}>{subject}</Text>
+        {/* Added a subtle divider */}
+        <View style={styles.cardDivider} />
+        <Ionicons name="chevron-forward-outline" size={24} color="#9ca3af" />
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
 export default function MainPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
-  // Memoize the list of selected subjects from the user context
-  const selectedSubjects = useMemo(() => {
-    if (!user?.selectedSubjects) return [];
-    return Object.entries(user.selectedSubjects)
-      .filter(([, isSelected]) => isSelected)
-      .map(([subjectName]) => subjectName);
-  }, [user?.selectedSubjects]);
+  useEffect(() => {
+    const loadSelectedSubjects = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser.selectedSubjects) {
+            const subjects = Object.entries(parsedUser.selectedSubjects)
+              .filter(([, isSelected]) => isSelected)
+              .map(([subjectName]) => subjectName);
+            setSelectedSubjects(subjects);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading subjects from storage:', error);
+        Alert.alert('Error', 'Could not load your subjects.');
+      }
+    };
 
-  const handleSubjectPress = (subjectName: string) => {
-    // Navigate to ChapterList, passing the required info
-    router.push({
-      pathname: '/ChapterList',
-      params: { boardName: user?.boardName, className: user?.className, subjectName },
-    });
+    loadSelectedSubjects();
+  }, [user]); // Re-run if the user object in context changes
+
+  const handleSubjectPress = async (subjectName: string) => {
+    try {
+      const storedUser = await AsyncStorage.getItem('user');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        // Navigate to ChapterList, passing the required info from the freshly loaded user data
+        router.push({
+          pathname: '/ChapterList',
+          params: {
+            boardName: parsedUser.boardName,
+            className: parsedUser.className,
+            subjectName,
+          },
+        });
+      } else {
+        Alert.alert('Error', 'Could not find user data. Please try logging out and back in.');
+      }
+    } catch (error) {
+      console.error('Error reading user from storage on subject press:', error);
+      Alert.alert('Error', 'An unexpected error occurred.');
+    }
   };
 
   const backgroundProgress = useSharedValue(0);
@@ -114,6 +177,9 @@ export default function MainPage() {
 
   const titleStyle = useStaggeredAnimation(100, 'top');
   const buttonStyle = useStaggeredAnimation(600, 'bottom');
+  // noSubjectsStyle must be called unconditionally at the top level of the component
+  // to follow the rules of hooks (don't call hooks conditionally).
+  const noSubjectsStyle = useStaggeredAnimation(150, 'bottom');
 
   return (
     <View style={styles.container}>
@@ -160,32 +226,20 @@ export default function MainPage() {
         <Animated.Text style={[styles.sectionTitle, titleStyle]}>Your Subjects</Animated.Text>
 
         {selectedSubjects.length > 0 ? (
-          selectedSubjects.map((subject, index) => {
-            const cardStyle = useStaggeredAnimation(150 + index * 100, 'bottom');
-            return (
-              <Animated.View key={subject} style={[styles.subjectCard, cardStyle]}>
-                <TouchableOpacity
-                  style={styles.touchableCard}
-                  activeOpacity={0.8}
-                  onPress={() => handleSubjectPress(subject)}
-                >
-                  <View style={styles.cardIconWrapper}>
-                    <Ionicons name="book-outline" size={24} color="#3b82f6" />
-                  </View>
-                  <Text style={styles.subjectTitle}>{subject}</Text>
-                  {/* Added a subtle divider */}
-                  <View style={styles.cardDivider} />
-                  <Ionicons name="chevron-forward-outline" size={24} color="#9ca3af" />
-                </TouchableOpacity>
-              </Animated.View>
-            );
-          })
+          selectedSubjects.map((subject, index) => (
+            <SubjectCard
+              key={subject}
+              subject={subject}
+              index={index}
+              onPress={handleSubjectPress}
+            />
+          ))
         ) : (
-          <Animated.View style={[styles.noSubjectsContainer, useStaggeredAnimation(150, 'bottom')]}>
+          <Animated.View style={[styles.noSubjectsContainer, noSubjectsStyle]}>
             <Ionicons name="bulb-outline" size={60} color="#9ca3af" style={styles.noSubjectsIcon} />
             <Text style={styles.noSubjectsText}>No subjects selected yet!</Text>
             <Text style={styles.noSubjectsSubText}>
-              Tap "{selectedSubjects.length > 0 ? 'Change Subjects' : 'Start New Lesson'}" to begin
+              Tap "{selectedSubjects.length > 0 ? 'Add Subjects' : 'Start New Lesson'}" to begin
               your learning adventure.
             </Text>
           </Animated.View>
@@ -201,7 +255,7 @@ export default function MainPage() {
         >
           <Animated.View style={[styles.button, { transform: [{ scale: buttonScale.value }] }]}>
             <Text style={styles.buttonText}>
-              {selectedSubjects.length > 0 ? 'Change Subjects' : 'Start New Lesson'}
+              {selectedSubjects.length > 0 ? 'Add Subjects' : 'Start New Lesson'}
             </Text>
           </Animated.View>
         </TouchableOpacity>

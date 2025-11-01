@@ -57,6 +57,25 @@ const FloatingShape = ({ style, color, duration = 10000, delay = 0 }: any) => {
   return <Animated.View style={[styles.shapeBase, style, { backgroundColor: color }, animatedStyle]} />;
 };
 
+// Move per-item hook usage into a child component so hooks are not called inside the map
+const ChapterCard = ({ chapter, index }: { chapter: Chapter; index: number }) => {
+  const cardStyle = useStaggeredAnimation(150 + index * 100);
+
+  return (
+    <Animated.View style={[styles.chapterCard, cardStyle]}>
+      <TouchableOpacity style={styles.touchableCard} activeOpacity={0.7}>
+        <View style={styles.lessonNumberContainer}>
+          <Text style={styles.lessonNumber}>{chapter.lessonNumber}</Text>
+        </View>
+        <View style={styles.chapterInfo}>
+          <Text style={styles.chapterTitle}>{chapter.title}</Text>
+        </View>
+        <Ionicons name="play-circle" size={40} color="#3b82f6" />
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
 export default function ChapterList() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -124,28 +143,15 @@ export default function ChapterList() {
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Animated.View style={[styles.pathHeader, headerStyle]}>
-          <Text style={styles.pathText}>{boardName} &gt; {className}</Text>
+          <Text style={styles.pathText}>{className}</Text>
         </Animated.View>
 
         {loading ? (
           <ActivityIndicator size="large" color="#3b82f6" style={{ marginTop: 50 }} />
         ) : (
-          chapters.map((chapter, index) => {
-            const cardStyle = useStaggeredAnimation(150 + index * 100);
-            return (
-              <Animated.View key={chapter.id} style={[styles.chapterCard, cardStyle]}>
-                <TouchableOpacity style={styles.touchableCard} activeOpacity={0.7}>
-                  <View style={styles.lessonNumberContainer}>
-                    <Text style={styles.lessonNumber}>{chapter.lessonNumber}</Text>
-                  </View>
-                  <View style={styles.chapterInfo}>
-                    <Text style={styles.chapterTitle}>{chapter.title}</Text>
-                  </View>
-                  <Ionicons name="play-circle" size={40} color="#3b82f6" />
-                </TouchableOpacity>
-              </Animated.View>
-            );
-          })
+          chapters.map((chapter, index) => (
+            <ChapterCard key={chapter.id} chapter={chapter} index={index} />
+          ))
         )}
       </ScrollView>
     </View>
@@ -176,7 +182,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pathText: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '600',
     color: '#475569',
   },

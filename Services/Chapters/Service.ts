@@ -17,6 +17,7 @@ export interface Chapter {
   boardName: string;
   className: string;
   name: string; 
+  number: number;
   subject: string; 
   textUrl: string;
 }

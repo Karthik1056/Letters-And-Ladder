@@ -21,7 +21,11 @@ export interface Chapter {
   subject: string; 
   textUrl: string;
 }
-
+export interface fetchChaperBySubject{
+  boardName: string;
+  className: string;
+  subject: string;  
+}
 export async function fetchAllChapters(): Promise<Chapter[]> {
   try {
     const q = query(collection(db, "chapters"));
@@ -43,25 +47,15 @@ export async function fetchAllChapters(): Promise<Chapter[]> {
   }
 }
 
-export async function fetchUserChapters(user: UserData): Promise<Chapter[]> {
-  const { boardName, className, selectedSubjects } = user;
+export async function fetchChaptersByFilters(
+  boardName: string,
+  className: string,
+  subject: string
+): Promise<fetchChaperBySubject[]> {
 
-  if (!boardName || !className || !selectedSubjects) {
-    console.log("User data (board, class, or subjects) is incomplete. Cannot fetch chapters.");
+  if (!boardName || !className || !subject) {
+    console.log("Missing boardName, className, or subject.");
     return [];
-  }
-
-  const subjectsToFetch = Object.keys(selectedSubjects).filter(
-    (subjectName) => selectedSubjects[subjectName] === true
-  );
-
-  if (subjectsToFetch.length === 0) {
-    console.log("No subjects selected by the user.");
-    return [];
-  }
-
-  if (subjectsToFetch.length > 30) {
-     console.warn("User has more than 30 subjects selected. Firestore query will fail.");
   }
 
   try {
@@ -69,13 +63,13 @@ export async function fetchUserChapters(user: UserData): Promise<Chapter[]> {
       collection(db, "chapters"),
       where("boardName", "==", boardName),
       where("className", "==", className),
-      where("subject", "in", subjectsToFetch)
+      where("subject", "==", subject)
     );
 
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
-      console.log("No matching chapters found for user's selection.");
+      console.log("No matching chapters found.");
       return [];
     }
 
@@ -83,9 +77,8 @@ export async function fetchUserChapters(user: UserData): Promise<Chapter[]> {
       id: doc.id,
       ...doc.data(),
     } as Chapter));
-
   } catch (error) {
-    console.error("Error fetching user chapters:", error);
+    console.error("Error fetching chapters:", error);
     return [];
   }
 }

@@ -9,9 +9,14 @@ import Animated, {
   Easing,
   useAnimatedStyle,
   withDelay,
+  withRepeat,
+  useAnimatedProps,
+  interpolateColor,
+  withSequence,
 } from 'react-native-reanimated';
 
-const AnimatedView = Animated.createAnimatedComponent(View);
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+const AnimatedView = Animated.createAnimatedComponent(View); // Keep this for content animations
 
 const useFadeInAnimation = (delay: number) => {
   const animationProgress = useSharedValue(0);
@@ -29,6 +34,41 @@ const useFadeInAnimation = (delay: number) => {
       translateY: withTiming(animationProgress.value === 1 ? 0 : 20) 
     }],
   }));
+};
+
+// --- Reusable Animated Shape Component (from MainPage.tsx) ---
+const FloatingShape = ({
+  style,
+  color,
+  duration = 10000,
+  delay = 0,
+}: {
+  style?: object;
+  color: string;
+  duration?: number;
+  delay?: number;
+}) => {
+  const translateY = useSharedValue(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      translateY.value = withRepeat(
+        withSequence(
+          withTiming(-20, { duration: duration / 2, easing: Easing.inOut(Easing.ease) }),
+          withTiming(20, { duration: duration / 2, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [delay, duration]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  return <Animated.View style={[styles.shapeBase, style, { backgroundColor: color }, animatedStyle]} />;
 };
 
 export default function ChapterDetail() {
@@ -56,6 +96,19 @@ export default function ChapterDetail() {
   const pathStyle = useFadeInAnimation(200);
   const contentStyle = useFadeInAnimation(300);
 
+  // --- Background Animation Logic (from MainPage.tsx) ---
+  const backgroundProgress = useSharedValue(0);
+  useEffect(() => {
+    backgroundProgress.value = withRepeat(withTiming(1, { duration: 8000 }), -1, true);
+  }, []);
+
+  const animatedGradientProps = useAnimatedProps(() => {
+    const color1 = interpolateColor(backgroundProgress.value, [0, 1], ['#eaf3fa', '#d9e8f5']);
+    const color2 = interpolateColor(backgroundProgress.value, [0, 1], ['#d9e8f5', '#eaf3fa']);
+    return { colors: [color1, color2] as [string, string] };
+  });
+  // --- End of Background Animation Logic ---
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -72,6 +125,27 @@ export default function ChapterDetail() {
           ),
         }}
       />
+
+      {/* --- Animated Background Elements (from MainPage.tsx) --- */}
+      <AnimatedLinearGradient
+        style={StyleSheet.absoluteFill}
+        colors={['#eaf3fa', '#d9e8f5']}
+        animatedProps={animatedGradientProps}
+      />
+      <FloatingShape style={styles.shape1} color="rgba(147, 197, 253, 0.3)" duration={12000} />
+      <FloatingShape
+        style={styles.shape2}
+        color="rgba(165, 214, 255, 0.3)"
+        duration={10000}
+        delay={1000}
+      />
+      <FloatingShape
+        style={styles.shape3}
+        color="rgba(191, 219, 254, 0.3)"
+        duration={14000}
+        delay={500}
+      />
+      {/* --- End of Animated Background Elements --- */}
 
       <ScrollView style={styles.scrollContainer}>
         <AnimatedView style={[styles.headerSection, titleStyle]}>
@@ -113,7 +187,7 @@ export default function ChapterDetail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#eaf3fa',
+    // backgroundColor is now handled by the AnimatedLinearGradient
   },
   headerBackground: { 
     flex: 1 
@@ -211,4 +285,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontStyle: 'italic',
   },
+  // --- Shape Styles (from MainPage.tsx) ---
+  shapeBase: { position: 'absolute', borderRadius: 9999 },
+  shape1: { width: 200, height: 200, top: '10%', left: -80 },
+  shape2: { width: 150, height: 150, bottom: '15%', right: -60 },
+  shape3: { width: 100, height: 100, top: '60%', left: 20 },
 });

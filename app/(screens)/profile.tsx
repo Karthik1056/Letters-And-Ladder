@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -114,7 +114,7 @@ export default function ProfilePage() {
             <LinearGradient colors={['#3b82f6', '#60a5fa']} style={styles.headerBackground} />
           ),
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <TouchableOpacity onPress={() => router.replace('/MainPage')} style={styles.backButton}>
               <Ionicons name="arrow-back" size={22} color="#fff" />
             </TouchableOpacity>
           ),
@@ -145,7 +145,7 @@ export default function ProfilePage() {
             {/* Edit Name Row */}
             <TouchableOpacity
               style={styles.actionRow}
-              onPress={() => router.push('/edit-profile')}
+              onPress={() => router.push('/profile')}
             >
               <View style={styles.actionLeft}>
                 <Ionicons name="person-outline" size={22} color="#475569" style={styles.actionIcon} />

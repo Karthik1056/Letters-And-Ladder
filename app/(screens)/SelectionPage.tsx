@@ -19,7 +19,7 @@ import Animated, {
   interpolateColor,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
-import { SelectionGroup } from "../components/SelectionGroup"; // Adjust path
+import { SelectionGroup } from "@/components/SelectionGroup"; // Adjust path
 import { fetchBoards, DataMap, Board } from "@/Services/Boards/Service"; // Adjust path
 import { fetchClassesByBoardName, ClassItem } from "@/Services/Class/Service"; // Adjust path
 import { updateUserInfo } from "@/Services/User/UserService"; // Adjust path
@@ -153,7 +153,7 @@ export default function SelectionPage() {
       const subjectsParam = selectedSubjects.join(',');
 
       router.push({
-        pathname: "/",
+        pathname: "/MainPage",
         params: {
           board: selectedBoardName,
           class: selectedClassObject.name,

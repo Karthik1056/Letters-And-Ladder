@@ -4,8 +4,6 @@ import { useFonts } from 'expo-font';
 import { SplashScreen } from 'expo-router';
 import "./global.css"
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSharedValue } from 'react-native-reanimated';
 import { AuthProvider } from "../context/AuthContext";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -16,12 +14,6 @@ export default function RootLayout() {
     'OpenDyslexic-Regular': require('../assets/fonts/OpenDyslexic-Regular.otf'),
     'OpenDyslexic-Bold': require('../assets/fonts/OpenDyslexic-Bold.otf'),
   });
-
-  const myValue = useSharedValue(0);
-
-  useEffect(() => {
-    myValue.value = 1;
-  }, []);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
@@ -38,11 +30,10 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaView style={{ flex: 1 }} edges={['right', 'left']}>
-          <Stack>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          </Stack>
-        </SafeAreaView>
+        <Stack>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(screens)" options={{ headerShown: false }} />
+        </Stack>
       </GestureHandlerRootView>
     </AuthProvider>
   );

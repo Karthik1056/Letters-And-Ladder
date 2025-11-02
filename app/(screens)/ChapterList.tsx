@@ -393,7 +393,7 @@ export default function ChapterList() {
     console.log("Navigating to chapter:", chapter.title);
     // Navigate to a new screen (e.g., 'ChapterDetail')
     router.push({
-      pathname: '/ChapterDetail', 
+      pathname: './ChapterDetail', 
       params: { 
         // Pass all the chapter data as string parameters
         chapterId: chapter.id,

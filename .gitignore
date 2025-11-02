@@ -38,7 +38,6 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
-package-lock.json
 
 # generated native folders
 /ios

@@ -4,6 +4,7 @@ import { doc, getDoc } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth, db } from "../firebaseConfig";
 import { logout } from "../Services/Auth/AuthService";
+import { TokenService } from "../Services/Auth/TokenService";
 
 interface UserData {
   uid: string;
@@ -55,9 +56,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Effect to listen to Firebase Auth state changes
   useEffect(() => {
-    // Set loading to true when starting the listener
-    // setLoading(true); // Re-enable loading check during auth state change
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log("Firebase Auth state changed. User:", firebaseUser?.uid || 'None');
       if (firebaseUser) {
@@ -67,47 +65,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           const firestoreData = userSnap.exists() ? userSnap.data() : {};
 
-          // Construct userData carefully, checking for undefined explicitly
           const userData: UserData = {
             uid: firebaseUser.uid,
-            email: firebaseUser.email || "", // Ensure email is not null
-            name: firestoreData.name, // Will be undefined if not present
-            createdAt: firestoreData.createdAt, // Will be undefined if not present
-            state: firestoreData.state, // Will be undefined if not present
-            className: firestoreData.className, // Changed from 'class'
-            boardName: firestoreData.boardName, // Add boardName
-            selectedSubjects: firestoreData.selectedSubjects, // Add selectedSubjects
+            email: firebaseUser.email || "",
+            name: firestoreData.name,
+            createdAt: firestoreData.createdAt,
+            state: firestoreData.state,
+            className: firestoreData.className,
+            boardName: firestoreData.boardName,
+            selectedSubjects: firestoreData.selectedSubjects,
           };
 
-          // Update state
           setUser(userData);
-
-          // Save to AsyncStorage
-          const userDataString = JSON.stringify(userData);
-          await AsyncStorage.setItem("user", userDataString);
-          console.log("Saved user to AsyncStorage:", userData); // Log saved user
-
-          // Optionally read back immediately to verify (for debugging)
-          const readBackUser = await AsyncStorage.getItem("user");
-          console.log("Read back user immediately after save:", readBackUser ? JSON.parse(readBackUser) : null);
+          await AsyncStorage.setItem("user", JSON.stringify(userData));
+          
+          // Save JWT token with 2-day expiration
+          await TokenService.saveToken();
+          console.log("Saved user and token to storage:", userData);
 
         } catch (error) {
-          console.error("Error fetching Firestore data or saving to AsyncStorage:", error);
-          // Decide how to handle this - maybe log out the user?
+          console.error("Error fetching Firestore data or saving to storage:", error);
           setUser(null);
           await AsyncStorage.removeItem("user");
-          console.log("Removed user from AsyncStorage due to error during fetch/save.");
+          await TokenService.clearToken();
         }
       } else {
         setUser(null);
         await AsyncStorage.removeItem("user");
-        console.log("User signed out. Removed user from AsyncStorage.");
-
-        // Optionally read back immediately to verify removal (for debugging)
-        const readBackUser = await AsyncStorage.getItem("user");
-        console.log("Read back user immediately after removal (should be null):", readBackUser);
+        await TokenService.clearToken();
+        console.log("User signed out. Cleared all storage.");
       }
-
     });
 
     return () => {
@@ -121,16 +108,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await logout(); 
       setUser(null);
-      await AsyncStorage.removeItem("user"); 
-      console.log("User logged out successfully. Removed user from AsyncStorage.");
-
-      
-      const readBackUser = await AsyncStorage.getItem("user");
-      console.log("Read back user immediately after logout removal (should be null):", readBackUser);
-
+      await AsyncStorage.removeItem("user");
+      await TokenService.clearToken();
+      console.log("User logged out successfully. Cleared all storage.");
     } catch (error) {
       console.error("Error during logout:", error);
- 
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,7 +20,7 @@ const AnimatedView = Animated.createAnimatedComponent(View); // Keep this for co
 
 const useFadeInAnimation = (delay: number) => {
   const animationProgress = useSharedValue(0);
-  
+
   useEffect(() => {
     animationProgress.value = withDelay(
       delay,
@@ -30,8 +30,8 @@ const useFadeInAnimation = (delay: number) => {
 
   return useAnimatedStyle(() => ({
     opacity: animationProgress.value,
-    transform: [{ 
-      translateY: withTiming(animationProgress.value === 1 ? 0 : 20) 
+    transform: [{
+      translateY: withTiming(animationProgress.value === 1 ? 0 : 20)
     }],
   }));
 };
@@ -71,7 +71,10 @@ const FloatingShape = ({
   return <Animated.View style={[styles.shapeBase, style, { backgroundColor: color }, animatedStyle]} />;
 };
 
+
 export default function ChapterDetail() {
+  const [chapter, setChapter] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
   const params = useLocalSearchParams() as {
     chapterId?: string;
@@ -80,7 +83,7 @@ export default function ChapterDetail() {
     subject?: string;
     className?: string;
     boardName?: string;
-    textUrl?: string; 
+    textUrl?: string;
   };
 
   const {
@@ -91,7 +94,7 @@ export default function ChapterDetail() {
     boardName = "Board",
     textUrl = "No URL provided"
   } = params;
-  
+
   const titleStyle = useFadeInAnimation(100);
   const pathStyle = useFadeInAnimation(200);
   const contentStyle = useFadeInAnimation(300);
@@ -107,6 +110,25 @@ export default function ChapterDetail() {
     const color2 = interpolateColor(backgroundProgress.value, [0, 1], ['#d9e8f5', '#eaf3fa']);
     return { colors: [color1, color2] as [string, string] };
   });
+
+  useEffect(() => {
+    const fetchChapter = async () => {
+      if (textUrl && textUrl !== "No URL provided") {
+        setLoading(true);
+        try {
+          const res = await fetch(textUrl);
+          const text = await res.text();
+          setChapter(text);
+        } catch (error) {
+          console.error('Error fetching chapter:', error);
+          setChapter('Failed to load chapter content.');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchChapter();
+  }, [textUrl])
   // --- End of Background Animation Logic ---
 
   return (
@@ -171,13 +193,21 @@ export default function ChapterDetail() {
             {subject}
           </Text>
         </AnimatedView>
-        
+
         <AnimatedView style={[styles.contentBox, contentStyle]}>
           <Text style={styles.contentTitle}>Chapter Content</Text>
-          <Text style={styles.contentText}>
-            The text content for this chapter will be loaded from:
-          </Text>
-          <Text style={[styles.contentText, styles.urlText]}>{textUrl}</Text>
+          {loading ? (
+            <Text style={styles.contentText}>Loading chapter content...</Text>
+          ) : chapter ? (
+            <Text style={styles.contentText}>{chapter}</Text>
+          ) : (
+            <>
+              <Text style={styles.contentText}>
+                The text content for this chapter will be loaded from:
+              </Text>
+              <Text style={[styles.contentText, styles.urlText]}>{textUrl}</Text>
+            </>
+          )}
         </AnimatedView>
       </ScrollView>
     </View>
@@ -189,13 +219,13 @@ const styles = StyleSheet.create({
     flex: 1,
     // backgroundColor is now handled by the AnimatedLinearGradient
   },
-  headerBackground: { 
-    flex: 1 
+  headerBackground: {
+    flex: 1
   },
-  headerTitle: { 
-    fontWeight: 'bold', 
-    color: '#fff', 
-    fontSize: 20 
+  headerTitle: {
+    fontWeight: 'bold',
+    color: '#fff',
+    fontSize: 20
   },
   backButton: {
     marginLeft: 16,

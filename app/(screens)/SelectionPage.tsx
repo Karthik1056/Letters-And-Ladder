@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { SelectionGroup } from "@/components/SelectionGroup"; // Adjust path
 import { fetchBoards, DataMap, Board } from "@/Services/Boards/Service"; // Adjust path
 import { fetchClassesByBoardName, ClassItem } from "@/Services/Class/Service"; // Adjust path
-import { updateUserInfo, getUserInfo } from "@/Services/User/UserService"; // Adjust path
+import { updateUserInfo, getUserInfo ,initializeUserProgress} from "@/Services/User/UserService"; // Adjust path
 import AnimatedBackground from "../../components/AnimatedBackground";
 
 export default function SelectionPage() {
@@ -141,16 +141,18 @@ export default function SelectionPage() {
          return;
     }
 
-    // **FIX: Pass multiple subjects to ChapterList**
-    // We join them with a comma. ChapterList will need to split this.
+    await initializeUserProgress();
+
     const subjectsParam = selectedSubjects.join(',');
+
+
 
     router.push({
       pathname: "/MainPage",
       params: {
         board: selectedBoardName,
         class: selectedClassObject.name,
-        subjects: subjectsParam, // Pass comma-separated string
+        subjects: subjectsParam,
       },
     });
   };

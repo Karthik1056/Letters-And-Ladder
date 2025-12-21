@@ -5,7 +5,7 @@ import { SplashScreen } from 'expo-router';
 import "./global.css"
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from "../context/AuthContext";
-
+import { SimplifiedLessonProvider } from '../context/SimplifiedLessonContext';
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -29,12 +29,15 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(screens)" options={{ headerShown: false }} />
-        </Stack>
-      </GestureHandlerRootView>
+      <SimplifiedLessonProvider>
+
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack>
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(screens)" options={{ headerShown: false }} />
+          </Stack>
+        </GestureHandlerRootView>
+      </SimplifiedLessonProvider>
     </AuthProvider>
   );
 }

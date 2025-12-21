@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import AnimatedBackground from '../../components/AnimatedBackground';
 import { fetchChaptersByFilters } from '@/Services/Chapters/Service';
+import {getUserProgress} from '../../Services/User/UserService'
 
 // --- Custom Hook for Staggered Animation ---
 const useStaggeredAnimation = (delay: number, from: 'bottom' | 'top' | 'scale' = 'scale') => {
@@ -33,11 +34,11 @@ const useStaggeredAnimation = (delay: number, from: 'bottom' | 'top' | 'scale' =
       from === 'scale'
         ? [{ scale: animationProgress.value }]
         : [
-            {
-              translateY:
-                (1 - animationProgress.value) * (from === 'bottom' ? 20 : -20),
-            },
-          ],
+          {
+            translateY:
+              (1 - animationProgress.value) * (from === 'bottom' ? 20 : -20),
+          },
+        ],
   }));
 };
 
@@ -90,47 +91,73 @@ export default function MainPage() {
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
 
+  // useEffect(() => {
+  //   const loadSelectedSubjects = async () => {
+  //     try {
+  //       const storedUser = await AsyncStorage.getItem('user');
+  //       if (storedUser) {
+  //         const parsedUser = JSON.parse(storedUser);
+  //         if (parsedUser.selectedSubjects) {
+  //           const subjects = Object.entries(parsedUser.selectedSubjects)
+  //             .filter(([, isSelected]) => isSelected)
+  //             .map(([subjectName]) => subjectName);
+  //           setSelectedSubjects(subjects);
+
+  //           // Calculate progress for each subject
+  //           const newProgressMap: Record<string, number> = {};
+  //           const { boardName, className, completedChapters = {} } = parsedUser;
+
+  //           if (boardName && className) {
+  //             await Promise.all(
+  //               subjects.map(async (subject) => {
+  //                 try {
+  //                   const chapters = await fetchChaptersByFilters(boardName, className, subject);
+  //                   const total = chapters.length;
+  //                   const completed = chapters.filter((ch: any) => completedChapters[ch.id]).length;
+  //                   newProgressMap[subject] = total > 0 ? (completed / total) * 100 : 0;
+  //                 } catch (e) {
+  //                   newProgressMap[subject] = 0;
+  //                 }
+  //               })
+  //             );
+  //             setProgressMap(newProgressMap);
+  //           }
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('Error loading subjects from storage:', error);
+  //       Alert.alert('Error', 'Could not load your subjects.');
+  //     }
+  //   };
+
+  //   loadSelectedSubjects();
+  // }, [user]); // Re-run if the user object in context changes
+
   useEffect(() => {
     const loadSelectedSubjects = async () => {
       try {
-        const storedUser = await AsyncStorage.getItem('user');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          if (parsedUser.selectedSubjects) {
-            const subjects = Object.entries(parsedUser.selectedSubjects)
-              .filter(([, isSelected]) => isSelected)
-              .map(([subjectName]) => subjectName);
-            setSelectedSubjects(subjects);
+        const progressData = await getUserProgress();
 
-            // Calculate progress for each subject
-            const newProgressMap: Record<string, number> = {};
-            const { boardName, className, completedChapters = {} } = parsedUser;
+        if (progressData && progressData.subjects) {
+          const subjects = Object.keys(progressData.subjects);
+          setSelectedSubjects(subjects);
 
-            if (boardName && className) {
-              await Promise.all(
-                subjects.map(async (subject) => {
-                  try {
-                    const chapters = await fetchChaptersByFilters(boardName, className, subject);
-                    const total = chapters.length;
-                    const completed = chapters.filter((ch: any) => completedChapters[ch.id]).length;
-                    newProgressMap[subject] = total > 0 ? (completed / total) * 100 : 0;
-                  } catch (e) {
-                    newProgressMap[subject] = 0;
-                  }
-                })
-              );
-              setProgressMap(newProgressMap);
-            }
-          }
+          const newProgressMap: Record<string, number> = {};
+
+          subjects.forEach((subject) => {
+            newProgressMap[subject] = progressData.subjects[subject].percentage || 0;
+          });
+
+          setProgressMap(newProgressMap);
         }
       } catch (error) {
-        console.error('Error loading subjects from storage:', error);
-        Alert.alert('Error', 'Could not load your subjects.');
+        console.error('Error loading user progress:', error);
+        Alert.alert('Error', 'Could not load your progress.');
       }
     };
 
     loadSelectedSubjects();
-  }, [user]); // Re-run if the user object in context changes
+  }, [user]);
 
   const handleSubjectPress = async (subjectName: string) => {
     try {
@@ -178,7 +205,7 @@ export default function MainPage() {
             headerRight: () => (
               // Assuming profile is also in the (screens) group
               <TouchableOpacity onPress={() => router.push('/profile')} style={styles.profileButton}>
-                <Ionicons name="person-circle" size={32} color="#fff" />
+                <Ionicons name="person-circle" size={40} color="#fff" />
               </TouchableOpacity>
             ),
           }}
@@ -186,6 +213,10 @@ export default function MainPage() {
 
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <Animated.Text style={[styles.sectionTitle, titleStyle]}>Your Subjects</Animated.Text>
+
+          <TouchableOpacity onPress={() => router.push('/profile')} style={styles.profileButton}>
+            <Ionicons name="person-circle" size={40} color="#fff" />
+          </TouchableOpacity>
 
           {selectedSubjects.length > 0 ? (
             selectedSubjects.map((subject, index) => (

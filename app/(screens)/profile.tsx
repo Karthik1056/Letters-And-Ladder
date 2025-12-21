@@ -6,18 +6,13 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   withTiming,
-  withRepeat,
   Easing,
-  useAnimatedProps,
   useAnimatedStyle,
   withDelay,
   withSpring,
-  interpolateColor,
-  withSequence,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+import AnimatedBackground from '../../components/AnimatedBackground';
 
 // --- Custom Hook for Staggered Animation ---
 const useStaggeredAnimation = (delay: number) => {
@@ -36,45 +31,9 @@ const useStaggeredAnimation = (delay: number) => {
   }));
 };
 
-// --- Reusable Animated Shape Component ---
-const FloatingShape = ({
-  style,
-  color,
-  duration = 10000,
-  delay = 0,
-}: {
-  style?: object;
-  color: string;
-  duration?: number;
-  delay?: number;
-}) => {
-  const translateY = useSharedValue(0);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      translateY.value = withRepeat(
-        withSequence(
-          withTiming(-20, { duration: duration / 2, easing: Easing.inOut(Easing.ease) }),
-          withTiming(20, { duration: duration / 2, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
-      );
-    }, delay);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  return <Animated.View style={[styles.shapeBase, style, { backgroundColor: color }, animatedStyle]} />;
-};
-
 export default function ProfilePage() {
   const router = useRouter();
   const { logoutUser, user } = useAuth();
-  const backgroundProgress = useSharedValue(0);
   const buttonScale = useSharedValue(1);
 
   const handleSignOut = async () => {
@@ -87,32 +46,22 @@ export default function ProfilePage() {
     }
   };
 
-  useEffect(() => {
-    backgroundProgress.value = withRepeat(withTiming(1, { duration: 8000 }), -1, true);
-  }, []);
-
-  const animatedGradientProps = useAnimatedProps(() => {
-    const color1 = interpolateColor(backgroundProgress.value, [0, 1], ['#eaf3fa', '#d9e8f5']);
-    const color2 = interpolateColor(backgroundProgress.value, [0, 1], ['#d9e8f5', '#eaf3fa']);
-    return { colors: [color1, color2] as [string, string] };
-  });
-
   const animatedCardStyle = useStaggeredAnimation(200);
   const animatedButtonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value }],
   }));
 
   return (
-    <View style={styles.container}>
+    <AnimatedBackground>
       <Stack.Screen
         options={{
-          headerTitle: 'My Profile',
+          headerTitle: () => <Text style={styles.headerTitle}>My Profile</Text>,
           headerTitleAlign: 'center',
-          headerTitleStyle: styles.headerTitle,
           headerTintColor: '#fff',
           headerBackground: () => (
             <LinearGradient colors={['#3b82f6', '#60a5fa']} style={styles.headerBackground} />
           ),
+          headerBackVisible: false,
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.replace('/MainPage')} style={styles.backButton}>
               <Ionicons name="arrow-back" size={22} color="#fff" />
@@ -120,16 +69,6 @@ export default function ProfilePage() {
           ),
         }}
       />
-
-      <AnimatedLinearGradient
-        style={StyleSheet.absoluteFill}
-        colors={['#eaf3fa', '#d9e8f5']}
-        animatedProps={animatedGradientProps}
-      />
-
-      <FloatingShape style={styles.shape1} color="rgba(147, 197, 253, 0.3)" duration={12000} />
-      <FloatingShape style={styles.shape2} color="rgba(165, 214, 255, 0.3)" duration={10000} delay={1000} />
-      <FloatingShape style={styles.shape3} color="rgba(191, 219, 254, 0.3)" duration={14000} delay={500} />
 
       <View style={styles.contentContainer}>
         <Animated.View style={[styles.card, animatedCardStyle]}>
@@ -167,27 +106,28 @@ export default function ProfilePage() {
           </View>
         </Animated.View>
       </View>
-    </View>
+    </AnimatedBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f0f4f8',
-  },
   // Header
   headerBackground: { flex: 1 },
   headerTitle: {
-    fontWeight: 'bold',
+    fontFamily: 'CustomFont-Bold',
     color: '#fff',
     fontSize: 20,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   backButton: {
     marginLeft: 16,
+    marginTop: -4,
     padding: 6,
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 9999,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   // Content
   contentContainer: {
@@ -217,14 +157,17 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'CustomFont-Bold',
     color: '#1e293b',
     marginTop: 12,
+    includeFontPadding: false,
   },
   userEmail: {
+    fontFamily: 'CustomFont-Regular',
     fontSize: 16,
     color: '#64748b',
     marginTop: 4,
+    includeFontPadding: false,
   },
   actionList: {
     width: '100%',
@@ -248,20 +191,17 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     fontSize: 17,
+    fontFamily: 'CustomFont-Regular',
     color: '#475569',
-    fontWeight: '500',
+    includeFontPadding: false,
   },
   signOutRow: {
     backgroundColor: '#fee2e2',
     marginTop: 20, // Add extra space before the sign out button
   },
   signOutLabel: {
+    fontFamily: 'CustomFont-Bold',
     color: '#dc2626',
-    fontWeight: '600',
+    includeFontPadding: false,
   },
-  // Shapes
-  shapeBase: { position: 'absolute', borderRadius: 9999 },
-  shape1: { width: 200, height: 200, top: '10%', left: -80 },
-  shape2: { width: 150, height: 150, bottom: '15%', right: -60 },
-  shape3: { width: 100, height: 100, top: '60%', left: 20 },
 });

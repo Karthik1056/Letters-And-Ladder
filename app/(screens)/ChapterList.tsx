@@ -7,17 +7,12 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   withTiming,
-  withRepeat,
   Easing,
-  useAnimatedProps,
   useAnimatedStyle,
   withDelay,
-  interpolateColor,
-  withSequence,
 } from 'react-native-reanimated';
 import { fetchChaptersByFilters } from '@/Services/Chapters/Service'; // Adjust path if needed
-
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+import AnimatedBackground from '../../components/AnimatedBackground';
 
 // 1. Updated Chapter type to include all necessary data
 export type Chapter = {
@@ -40,29 +35,6 @@ const useStaggeredAnimation = (delay: number) => {
     opacity: animationProgress.value,
     transform: [{ translateY: withTiming(animationProgress.value === 1 ? 0 : 20) }],
   }));
-};
-
-const FloatingShape = ({ style, color, duration = 10000, delay = 0 }: any) => {
-  const translateY = useSharedValue(0);
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      translateY.value = withRepeat(
-        withSequence(
-          withTiming(-20, { duration: duration / 2, easing: Easing.inOut(Easing.ease) }),
-          withTiming(20, { duration: duration / 2, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
-      );
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [delay, duration]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  return <Animated.View style={[styles.shapeBase, style, { backgroundColor: color }, animatedStyle]} />;
 };
 
 // 2. Updated ChapterCard to accept and use an 'onPress' prop
@@ -156,26 +128,14 @@ export default function ChapterList() {
     });
   };
 
-  const backgroundProgress = useSharedValue(0);
-  useEffect(() => {
-    backgroundProgress.value = withRepeat(withTiming(1, { duration: 8000 }), -1, true);
-  }, []);
-
-  const animatedGradientProps = useAnimatedProps(() => {
-    const color1 = interpolateColor(backgroundProgress.value, [0, 1], ['#eaf3fa', '#d9e8f5']);
-    const color2 = interpolateColor(backgroundProgress.value, [0, 1], ['#d9e8f5', '#eaf3fa']);
-    return { colors: [color1, color2] as [string, string] };
-  });
-
   const headerStyle = useStaggeredAnimation(0);
 
   return (
-    <View style={styles.container}>
+    <AnimatedBackground>
       <Stack.Screen
         options={{
-          headerTitle: (subjectName as string) || 'Chapters',
+          headerTitle: () => <Text style={styles.headerTitle}>{(subjectName as string) || 'Chapters'}</Text>,
           headerTitleAlign: 'center',
-          headerTitleStyle: styles.headerTitle,
           headerTintColor: '#fff',
           headerBackground: () => <LinearGradient colors={['#3b82f6', '#60a5fa']} style={styles.headerBackground} />,
           headerLeft: () => (
@@ -185,11 +145,6 @@ export default function ChapterList() {
           ),
         }}
       />
-
-      <AnimatedLinearGradient style={StyleSheet.absoluteFill} colors={['#eaf3fa', '#d9e8f5']} animatedProps={animatedGradientProps} />
-      <FloatingShape style={styles.shape1} color="rgba(147, 197, 253, 0.3)" duration={12000} />
-      <FloatingShape style={styles.shape2} color="rgba(165, 214, 255, 0.3)" duration={10000} delay={1000} />
-      <FloatingShape style={styles.shape3} color="rgba(191, 219, 254, 0.3)" duration={14000} delay={500} />
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Animated.View style={[styles.pathHeader, headerStyle]}>
@@ -210,14 +165,13 @@ export default function ChapterList() {
           ))
         )}
       </ScrollView>
-    </View>
+    </AnimatedBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   headerBackground: { flex: 1 },
-  headerTitle: { fontWeight: 'bold', color: '#fff', fontSize: 20 },
+  headerTitle: { fontFamily: 'CustomFont-Bold', color: '#fff', fontSize: 20, includeFontPadding: false, textAlignVertical: 'center' },
   backButton: {
     marginLeft: 16,
     marginTop: -4,
@@ -239,8 +193,9 @@ const styles = StyleSheet.create({
   },
   pathText: {
     fontSize: 20,
-    fontWeight: '600',
+    fontFamily: 'CustomFont-Bold',
     color: '#475569',
+    includeFontPadding: false,
   },
   chapterCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -268,19 +223,17 @@ const styles = StyleSheet.create({
   },
   lessonNumber: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'CustomFont-Bold',
     color: '#4338ca',
+    includeFontPadding: false,
   },
   chapterInfo: {
     flex: 1,
   },
   chapterTitle: {
     fontSize: 17,
-    fontWeight: '600',
+    fontFamily: 'CustomFont-Bold',
     color: '#1e293b',
+    includeFontPadding: false,
   },
-  shapeBase: { position: 'absolute', borderRadius: 9999 },
-  shape1: { width: 200, height: 200, top: 80, left: -80 },
-  shape2: { width: 150, height: 150, bottom: 100, right: -60 },
-  shape3: { width: 100, height: 100, bottom: -40, left: 20 },
 });

@@ -41,7 +41,7 @@ export default function SignUp() {
           subtitle="We're here to help you reach the peaks of learning. Are you ready?"
           isSignUp={true}
           onSubmit={handleSignUp}
-          onSwitch={() => router.replace('/sign-up')}
+          onSwitch={() => router.replace('/sign-in')}
           switchTextPart1="Already have an account?"
           switchTextPart2="Log In"
           submitText="Get Started"

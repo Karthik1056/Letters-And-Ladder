@@ -56,7 +56,13 @@ function SelectItem<T extends string>({ item, isSelected, onPress, index }: Sele
             isSelected ? 'text-blue-700 font-bold' : 'text-gray-900'
           }`}
         >
-          {item.label}
+          <Text style={{ 
+            includeFontPadding: false, 
+            fontFamily: isSelected ? 'CustomFont-Bold' : 'CustomFont',
+            fontWeight: 'normal' 
+          }}>
+            {item.label}
+          </Text>
         </Text>
       </Pressable>
     </Animated.View>
@@ -91,9 +97,11 @@ export function SelectionGroup<T extends string>({
       style={style}
     >
       <View className="flex-row items-center justify-center mb-6">
-        <Ionicons name={iconName} size={28} color="#374151" style={{ marginRight: 12 }} />
-        <Text className="text-3xl font-bold text-center text-gray-800 tracking-wide">
-          {title}
+        <Ionicons name={iconName} size={24} color="#374151" style={{ marginRight: 8 }} />
+        <Text className="text-xl font-bold text-center text-gray-800 tracking-wide">
+          <Text style={{ includeFontPadding: false, fontFamily: 'CustomFont-Bold', fontWeight: 'normal' }}>
+            {title}
+          </Text>
         </Text>
       </View>
       <View className="flex-row flex-wrap justify-center">

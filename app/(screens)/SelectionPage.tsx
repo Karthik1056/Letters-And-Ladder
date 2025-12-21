@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  View,
   Text,
   TouchableOpacity,
   ScrollView,
@@ -10,21 +9,12 @@ import {
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  useSharedValue,
-  withTiming,
-  withRepeat,
-  Easing,
-  useAnimatedStyle,
-  interpolateColor,
-} from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { SelectionGroup } from "@/components/SelectionGroup"; // Adjust path
 import { fetchBoards, DataMap, Board } from "@/Services/Boards/Service"; // Adjust path
 import { fetchClassesByBoardName, ClassItem } from "@/Services/Class/Service"; // Adjust path
 import { updateUserInfo } from "@/Services/User/UserService"; // Adjust path
-
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+import AnimatedBackground from "../../components/AnimatedBackground";
 
 export default function SelectionPage() {
   const router = useRouter();
@@ -44,16 +34,6 @@ export default function SelectionPage() {
 
   // **FIX: Update isReady check**
   const isReady = !!(selectedBoardName && selectedClassId && selectedSubjects.length > 0);
-
-  // 🔹 Animated background
-  const bg = useSharedValue(0);
-  useEffect(() => {
-    bg.value = withRepeat(withTiming(1, { duration: 8000, easing: Easing.linear }), -1, true);
-  }, []);
-  const animatedGradient = useAnimatedStyle(() => {
-    const color1 = interpolateColor(bg.value, [0, 1], ["#eaf3fa", "#d9e8f5"]);
-    return { backgroundColor: color1 };
-  });
 
   // 🔹 Load boards initially
   useEffect(() => {
@@ -167,12 +147,11 @@ export default function SelectionPage() {
   };
 
   return (
-    <View style={styles.container}>
+    <AnimatedBackground>
       <Stack.Screen
         options={{
-          headerTitle: "Student Selection",
+          headerTitle: () => <Text style={styles.headerTitle}>Student Selection</Text>,
           headerTitleAlign: "center",
-          headerTitleStyle: styles.headerTitle,
           headerTintColor: "#fff",
           headerBackground: () => (
             <LinearGradient colors={["#3b82f6", "#60a5fa"]} style={styles.headerBackground} />
@@ -187,8 +166,6 @@ export default function SelectionPage() {
           ),
         }}
       />
-
-      <Animated.View style={[StyleSheet.absoluteFill, animatedGradient]} />
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* 🔹 Board Selection */}
@@ -256,16 +233,16 @@ export default function SelectionPage() {
           <Text style={styles.buttonText}>Let's Learn!</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </AnimatedBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   headerBackground: { flex: 1 },
-  headerTitle: { fontWeight: "bold", color: "#fff", fontSize: 20 },
+  headerTitle: { fontFamily: 'CustomFont-Bold', color: "#fff", fontSize: 20, includeFontPadding: false, textAlignVertical: 'center' },
   backButton: {
     marginLeft: 16,
+    marginTop: -4,
     backgroundColor: "rgba(255,255,255,0.2)",
     borderRadius: 9999,
     padding: 6,
@@ -279,10 +256,12 @@ const styles = StyleSheet.create({
   },
   noDataText: {
     marginTop: 20,
+    fontFamily: 'CustomFont-Regular',
     fontSize: 16,
     color: "#6b7280",
     textAlign: "center",
     padding: 10,
+    includeFontPadding: false,
   },
   button: {
     width: '100%',
@@ -297,5 +276,12 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 8,
   },
-  buttonText: { fontSize: 20, fontWeight: "bold", color: "#fff", textAlign: "center" },
+  buttonText: {
+    fontFamily: 'CustomFont-Bold',
+    fontSize: 20,
+    color: "#fff",
+    textAlign: "center",
+    textAlignVertical: "center",
+    includeFontPadding: false,
+  },
 });

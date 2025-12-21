@@ -1,12 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFonts } from 'expo-font';
 import AuthBackground from '../../components/AuthBackground';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AuthIndex() {
   const router = useRouter();
+
+  const [fontsLoaded] = useFonts({
+    'CustomFont': require('../../assets/fonts/OpenDyslexic-Regular.otf'),
+    'CustomFont-Bold': require('../../assets/fonts/OpenDyslexic-Bold.otf'),
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <AuthBackground withContentContainer={false}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+      </AuthBackground>
+    );
+  }
 
   return (
     <AuthBackground withContentContainer={false}>
@@ -50,17 +64,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 50,
   },
   logo: {
     width: 150,
     height: 150,
   },
   appName: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 32,
+    fontFamily: 'CustomFont-Bold',
+    color: '#3b82f6',
+    opacity: 0.9,
     marginTop: 16,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   buttonContainer: {
     width: '100%',
@@ -76,6 +92,8 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 8,
     marginBottom: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   gradient: {
     width: '100%',
@@ -87,7 +105,10 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'CustomFont-Bold',
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   signUpButton: {
     backgroundColor: '#fff',

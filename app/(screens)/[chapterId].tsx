@@ -664,6 +664,7 @@ import Animated, {
 // ✅ IMPORT YOUR GAME CONTAINER HERE
 // If you haven't created the game files yet, comment this import out.
 import GameContainer from '../../components/Games/GameContainer'
+import AnimatedBackground from '../../components/AnimatedBackground';
 
 /* ====================================================================
    INTERFACES & STATIC DATA
@@ -957,9 +958,9 @@ export default function ChapterDetail() {
 
   /* ---------- Main Render ---------- */
   return (
-    <View style={styles.mainContainer}>
+    <AnimatedBackground>
       <Stack.Screen options={{
-        headerTitle: title,
+        headerTitle: () => <Text style={styles.headerTitle}>{title}</Text>,
         headerTitleAlign: "center",
         headerTintColor: "#fff",
         headerBackground: () => <LinearGradient colors={['#3b82f6', '#60a5fa']} style={{ flex: 1 }} />,
@@ -1049,7 +1050,7 @@ export default function ChapterDetail() {
         onSpeak={(text: string) => speakText(text, false)}
         character={<AnimatedCharacter isSpeaking={isSpeaking} />}
       />
-    </View>
+    </AnimatedBackground>
   );
 }
 
@@ -1057,42 +1058,42 @@ export default function ChapterDetail() {
    STYLES
 ==================================================================== */
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: '#f8fafc' },
-  backButton: { padding: 6, marginLeft: 12 },
+  backButton: { marginLeft: 16, marginTop: -4, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 9999, padding: 6 },
   scroll: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 80 }, // Extra padding for popup
 
   // --- Header ---
   headerRow: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
+  headerTitle: { fontFamily: 'CustomFont-Bold', color: '#fff', fontSize: 20, includeFontPadding: false, textAlignVertical: 'center' },
   lessonBadge: { width: 56, height: 56, borderRadius: 14, backgroundColor: "#e0e7ff", justifyContent: "center", alignItems: "center", marginRight: 14 },
-  lessonText: { fontSize: 20, fontWeight: "bold", color: "#4338ca" },
-  title: { fontSize: 24, fontWeight: "bold", color: "#1e293b", flex: 1, flexWrap: 'wrap' },
+  lessonText: { fontSize: 20, fontFamily: 'CustomFont-Bold', color: "#4338ca", includeFontPadding: false },
+  title: { fontSize: 24, fontFamily: 'CustomFont-Bold', color: "#1e293b", flex: 1, flexWrap: 'wrap', includeFontPadding: false },
 
   // --- Buttons ---
   toggleBtn: { backgroundColor: "#3b82f6", paddingVertical: 12, borderRadius: 12, marginBottom: 16 },
-  toggleText: { textAlign: "center", color: "#fff", fontWeight: "600", fontSize: 16 },
+  toggleText: { textAlign: "center", color: "#fff", fontFamily: 'CustomFont-Bold', fontSize: 16, includeFontPadding: false },
   letsLearnButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     backgroundColor: '#22c55e', paddingVertical: 14, borderRadius: 14, marginBottom: 24,
     shadowColor: "#16a34a", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 4,
   },
-  letsLearnButtonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  letsLearnButtonText: { color: 'white', fontSize: 18, fontFamily: 'CustomFont-Bold', includeFontPadding: false },
 
   // --- Content Box ---
   box: { backgroundColor: "white", borderRadius: 20, padding: 20, width: '100%', shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   boxHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderBottomColor: "#f1f5f9", paddingBottom: 12, marginBottom: 16 },
-  boxTitle: { fontSize: 18, fontWeight: "700", color: "#334155" },
-  placeholderText: { textAlign: 'center', color: '#94a3b8', fontStyle: 'italic', marginTop: 20 },
+  boxTitle: { fontSize: 18, fontFamily: 'CustomFont-Bold', color: "#334155", includeFontPadding: false },
+  placeholderText: { textAlign: 'center', color: '#94a3b8', fontStyle: 'italic', marginTop: 20, fontFamily: 'CustomFont-Regular', includeFontPadding: false },
 
   // --- Text Blocks ---
   blockWrapper: { flexDirection: 'row', marginBottom: 16, alignItems: 'flex-start' },
   readBlockBtn: { marginRight: 10, marginTop: 4, padding: 6, backgroundColor: '#f0f9ff', borderRadius: 8 },
-  paragraph: { fontSize: 18, lineHeight: 28, color: "#334155", flex: 1 },
-  dialogueParagraph: { fontSize: 18, lineHeight: 28, color: "#334155", flex: 1 },
-  dialogueText: {},
-  speaker: { fontWeight: "700", color: "#2563eb" },
+  paragraph: { fontSize: 18, lineHeight: 28, color: "#334155", flex: 1, fontFamily: 'CustomFont-Regular', includeFontPadding: false },
+  dialogueParagraph: { fontSize: 18, lineHeight: 28, color: "#334155", flex: 1, fontFamily: 'CustomFont-Regular', includeFontPadding: false },
+  dialogueText: { includeFontPadding: false },
+  speaker: { fontFamily: 'CustomFont-Bold', color: "#2563eb", includeFontPadding: false },
   poemLineContainer: { alignItems: 'center', width: '100%', marginBottom: 8 },
-  poemLine: { fontSize: 20, lineHeight: 32, textAlign: "center", color: "#1e293b", fontStyle: 'italic' },
+  poemLine: { fontSize: 20, lineHeight: 32, textAlign: "center", color: "#1e293b", fontStyle: 'italic', fontFamily: 'CustomFont-Regular', includeFontPadding: false },
   wordHighlight: { textDecorationLine: "underline", textDecorationStyle: "dotted", textDecorationColor: "#3b82f6", backgroundColor: "#e0f2fe" },
 
   // --- Dictionary Popup ---
@@ -1103,14 +1104,14 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "#f1f5f9",
   },
   popupHeader: { flexDirection: 'row', alignItems: 'baseline', marginBottom: 8 },
-  popupWord: { fontSize: 24, fontWeight: "800", color: "#1e3a8a" },
-  popupPhonetic: { fontSize: 18, color: "#64748b", marginLeft: 8 },
-  popupMeaning: { fontSize: 18, color: "#334155", lineHeight: 26 },
-  popupExample: { fontSize: 16, fontStyle: "italic", color: "#64748b", marginTop: 8 },
+  popupWord: { fontSize: 24, fontFamily: 'CustomFont-Bold', color: "#1e3a8a", includeFontPadding: false },
+  popupPhonetic: { fontSize: 18, color: "#64748b", marginLeft: 8, fontFamily: 'CustomFont-Regular', includeFontPadding: false },
+  popupMeaning: { fontSize: 18, color: "#334155", lineHeight: 26, fontFamily: 'CustomFont-Regular', includeFontPadding: false },
+  popupExample: { fontSize: 16, fontStyle: "italic", color: "#64748b", marginTop: 8, fontFamily: 'CustomFont-Regular', includeFontPadding: false },
   popupActions: { flexDirection: 'row', gap: 12, marginTop: 16 },
   popupSpeakBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: "#3b82f6", paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10 },
   popupCloseBtn: { backgroundColor: "#64748b", paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10 },
-  popupBtnText: { color: "white", fontWeight: "600", fontSize: 16 },
+  popupBtnText: { color: "white", fontFamily: 'CustomFont-Bold', fontSize: 16, includeFontPadding: false },
 
   // --- Character ---
   characterContainer: { width: 44, height: 44, justifyContent: "center", alignItems: "center" },

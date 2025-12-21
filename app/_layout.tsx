@@ -11,8 +11,8 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    'OpenDyslexic-Regular': require('../assets/fonts/OpenDyslexic-Regular.otf'),
-    'OpenDyslexic-Bold': require('../assets/fonts/OpenDyslexic-Bold.otf'),
+    'CustomFont-Regular': require('../assets/fonts/OpenDyslexic-Regular.otf'),
+    'CustomFont-Bold': require('../assets/fonts/OpenDyslexic-Bold.otf'),
   });
 
   useEffect(() => {

@@ -12,7 +12,7 @@ export default function AuthScreenWrapper({ children }: { children: React.ReactN
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={[styles.header, { top: insets.top }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
       {children}
@@ -35,5 +35,7 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
   },
 });

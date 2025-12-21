@@ -187,6 +187,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   forgotPasswordContainer: {
       width: '100%',

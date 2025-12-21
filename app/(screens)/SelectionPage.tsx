@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { SelectionGroup } from "@/components/SelectionGroup"; // Adjust path
 import { fetchBoards, DataMap, Board } from "@/Services/Boards/Service"; // Adjust path
 import { fetchClassesByBoardName, ClassItem } from "@/Services/Class/Service"; // Adjust path
-import { updateUserInfo } from "@/Services/User/UserService"; // Adjust path
+import { updateUserInfo, getUserInfo } from "@/Services/User/UserService"; // Adjust path
 import AnimatedBackground from "../../components/AnimatedBackground";
 
 export default function SelectionPage() {
@@ -80,12 +80,39 @@ export default function SelectionPage() {
     loadClasses();
   }, [selectedBoardName]);
 
+  // Update user info when selections change
+  useEffect(() => {
+    if (selectedBoardName && selectedClassId && selectedSubjects.length > 0) {
+      const selectedClassObject = classes.find(c => c.id === selectedClassId);
+      if (selectedClassObject) {
+        const subjectStatus: Record<string, boolean> = {};
+        subjects.forEach((subj) => (subjectStatus[subj] = false));
+        selectedSubjects.forEach((subj) => (subjectStatus[subj] = true));
+        updateUserInfo({
+          boardName: selectedBoardName,
+          className: selectedClassObject.name,
+          selectedSubjects: subjectStatus,
+        }).catch(err => console.error("updateUserInfo error:", err));
+      }
+    }
+  }, [selectedSubjects, selectedBoardName, selectedClassId, classes, subjects]);
+
   // 🔹 Handle class selection
   const handleClassSelect = (classId: string) => {
     setSelectedClassId(classId);
     const selected = classes.find((c) => c.id === classId);
     setSubjects(selected ? selected.subjects : []);
     setSelectedSubjects([]); // **FIX: Reset array**
+
+    // Load previous selections for this class
+    if (selected) {
+      getUserInfo().then(userData => {
+        if (userData && userData.boardName === selectedBoardName && userData.className === selected.name && userData.selectedSubjects) {
+          const previousSelected = Object.keys(userData.selectedSubjects).filter(key => userData.selectedSubjects[key]);
+          setSelectedSubjects(previousSelected);
+        }
+      }).catch(err => console.error("Failed to load previous selections:", err));
+    }
   };
 
   // **FIX: New handler for multi-select subjects**
@@ -114,36 +141,18 @@ export default function SelectionPage() {
          return;
     }
 
-    // **FIX: Build subjectStatus map from selectedSubjects array**
-    const subjectStatus: Record<string, boolean> = {};
-    // First, set all available subjects for this class to false
-    subjects.forEach((subj) => (subjectStatus[subj] = false));
-    // Then, set the selected ones to true
-    selectedSubjects.forEach((subj) => (subjectStatus[subj] = true));
+    // **FIX: Pass multiple subjects to ChapterList**
+    // We join them with a comma. ChapterList will need to split this.
+    const subjectsParam = selectedSubjects.join(',');
 
-    try {
-      await updateUserInfo({
-        boardName: selectedBoardName,
-        className: selectedClassObject.name,
-        selectedSubjects: subjectStatus,
-      });
-
-      // **FIX: Pass multiple subjects to ChapterList**
-      // We join them with a comma. ChapterList will need to split this.
-      const subjectsParam = selectedSubjects.join(',');
-
-      router.push({
-        pathname: "/MainPage",
-        params: {
-          board: selectedBoardName,
-          class: selectedClassObject.name,
-          subjects: subjectsParam, // Pass comma-separated string
-        },
-      });
-    } catch (err) {
-      console.error("updateUserInfo error:", err);
-      Alert.alert("Error", "Failed to save your selection.");
-    }
+    router.push({
+      pathname: "/MainPage",
+      params: {
+        board: selectedBoardName,
+        class: selectedClassObject.name,
+        subjects: subjectsParam, // Pass comma-separated string
+      },
+    });
   };
 
   return (

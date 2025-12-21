@@ -14,6 +14,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import AnimatedBackground from '../../components/AnimatedBackground';
+import { fetchChaptersByFilters } from '@/Services/Chapters/Service';
 
 // --- Custom Hook for Staggered Animation ---
 const useStaggeredAnimation = (delay: number, from: 'bottom' | 'top' | 'scale' = 'scale') => {
@@ -46,10 +47,12 @@ const SubjectCard = ({
   subject,
   index,
   onPress,
+  progress,
 }: {
   subject: string;
   index: number;
   onPress: (s: string) => void;
+  progress: number;
 }) => {
   const cardStyle = useStaggeredAnimation(150 + index * 100, 'bottom');
 
@@ -63,9 +66,18 @@ const SubjectCard = ({
         <View style={styles.cardIconWrapper}>
           <Ionicons name="book-outline" size={24} color="#3b82f6" />
         </View>
-        <Text style={styles.subjectTitle}>{subject}</Text>
-        {/* Added a subtle divider */}
-        <View style={styles.cardDivider} />
+        <View style={styles.subjectInfo}>
+          <Text style={styles.subjectTitle}>{subject}</Text>
+          <View style={styles.progressBarTrack}>
+            <LinearGradient
+              colors={['#60a5fa', '#3b82f6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressBarFill, { width: `${progress}%` }]}
+            />
+          </View>
+          <Text style={styles.progressLabel}>{Math.round(progress)}% Complete</Text>
+        </View>
         <Ionicons name="chevron-forward-outline" size={24} color="#9ca3af" />
       </TouchableOpacity>
     </Animated.View>
@@ -76,6 +88,7 @@ export default function MainPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [progressMap, setProgressMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const loadSelectedSubjects = async () => {
@@ -88,6 +101,26 @@ export default function MainPage() {
               .filter(([, isSelected]) => isSelected)
               .map(([subjectName]) => subjectName);
             setSelectedSubjects(subjects);
+
+            // Calculate progress for each subject
+            const newProgressMap: Record<string, number> = {};
+            const { boardName, className, completedChapters = {} } = parsedUser;
+
+            if (boardName && className) {
+              await Promise.all(
+                subjects.map(async (subject) => {
+                  try {
+                    const chapters = await fetchChaptersByFilters(boardName, className, subject);
+                    const total = chapters.length;
+                    const completed = chapters.filter((ch: any) => completedChapters[ch.id]).length;
+                    newProgressMap[subject] = total > 0 ? (completed / total) * 100 : 0;
+                  } catch (e) {
+                    newProgressMap[subject] = 0;
+                  }
+                })
+              );
+              setProgressMap(newProgressMap);
+            }
           }
         }
       } catch (error) {
@@ -161,6 +194,7 @@ export default function MainPage() {
                 subject={subject}
                 index={index}
                 onPress={handleSubjectPress}
+                progress={progressMap[subject] || 0}
               />
             ))
           ) : (
@@ -244,15 +278,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
-  cardDivider: { width: 1, height: '70%', backgroundColor: '#e2e8f0', marginRight: 16 },
-  subjectTitle: {
+  subjectInfo: {
     flex: 1,
+    marginRight: 12,
+    justifyContent: 'center',
+  },
+  subjectTitle: {
     fontSize: 18,
     fontFamily: 'CustomFont-Bold',
     color: '#1e293b',
-    marginRight: 16,
     includeFontPadding: false,
     textAlignVertical: 'center',
+  },
+  progressBarTrack: {
+    height: 10,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 5,
+    marginTop: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  progressBarFill: { height: '100%', borderRadius: 5 },
+  progressLabel: {
+    fontSize: 12, color: '#64748b', marginTop: 4, fontFamily: 'CustomFont-Regular', includeFontPadding: false
   },
   noSubjectsText: {
     fontSize: 18,

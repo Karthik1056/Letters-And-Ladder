@@ -17,12 +17,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import AnimatedBackground from '../../components/AnimatedBackground';
 import { updateUserInfo } from '@/Services/User/UserService';
-import { getAuth, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { getAuth, updatePassword, EmailAuthProvider, reauthenticateWithCredential, updateProfile } from 'firebase/auth';
 
 export default function EditProfile() {
   const router = useRouter();
-  const { user } = useAuth();
-
+  const { user, updateUser, logoutUser } = useAuth();
+ 
   const [name, setName] = useState(user?.name || '');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -44,6 +44,10 @@ export default function EditProfile() {
       // Check if name changed
       if (name !== user?.name) {
         updates.name = name;
+        const auth = getAuth();
+        if (auth.currentUser) {
+          await updateProfile(auth.currentUser, { displayName: name });
+        }
       }
       
       // Check if password update is requested
@@ -76,18 +80,24 @@ export default function EditProfile() {
         }
       }
 
-      if (Object.keys(updates).length > 0) {
-         await updateUserInfo(updates);
+      if (Object.keys(updates).length > 0 || passwordChanged) {
+        await updateUserInfo(updates);
+        if (user) { // Check if user exists
+           updateUser({ ...user, ...updates });
+         }
       }
 
-      if (Object.keys(updates).length > 0 || passwordChanged) {
+      if (passwordChanged) {
+        await logoutUser();
+        Alert.alert('Success', 'Password changed successfully. You have been signed out for security. Please sign in again.', [
+          { text: 'OK', onPress: () => router.replace('/sign-in') },
+        ]);
+      } else if (Object.keys(updates).length > 0) {
         setOldPassword('');
         setNewPassword('');
         Alert.alert('Success', 'Profile updated successfully.', [
           { text: 'OK', onPress: () => router.back() },
         ]);
-      } else {
-        router.back();
       }
     } catch (error: any) {
       console.error(error);

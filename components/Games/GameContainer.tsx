@@ -1,171 +1,12 @@
-// import React, { useState, useEffect } from 'react';
-// import { View, Text, StyleSheet, Modal, TouchableOpacity, SafeAreaView, Animated as RNAnimated } from 'react-native';
-// import { Ionicons } from '@expo/vector-icons';
-// import * as Speech from 'expo-speech';
-// import {  } from './GameData';
-// import GameFillInTheBlanks from '../Games/GameFillInTheBlanks';
-// import GameMatchTheFollowing from '../Games/GameMatchTheFollowing';
-// import GameSpeechPractice from '../Games/GameSpeechPractice';
-
-// // Simple Progress Bar Component
-// const ProgressBar = ({ current, total }: { current: number; total: number }) => (
-//   <View style={styles.progressTrack}>
-//     <View style={[styles.progressFill, { width: `${(current / total) * 100}%` }]} />
-//   </View>
-// );
-
-// interface GameContainerProps {
-//   isVisible: boolean;
-//   onClose: () => void;
-//   character: React.ReactNode; // Pass your existing AnimatedCharacter here
-//   onSpeak: (text: string) => void; // Reuse your main speak function
-  
-// }
-
-// export default function GameContainer({ isVisible, onClose, character, onSpeak }: GameContainerProps) {
-//   // Define the sequence of games. You can mix and match here.
-//   const gameSequence = [
-//     { type: 'fill', data: fibData[0] },
-//     { type: 'speak', data: speechData[0] },
-//     { type: 'fill', data: fibData[1] },
-//     { type: 'match', data: { colA: matchColA, colB: matchColB } }, // One big match game
-//     { type: 'fill', data: fibData[2] },
-//     { type: 'speak', data: speechData[1] },
-//     { type: 'fill', data: fibData[3] },
-//     { type: 'speak', data: speechData[2] },
-//   ];
-
-//   const [currentIndex, setCurrentIndex] = useState(0);
-//   const [answerState, setAnswerState] = useState<'idle' | 'correct' | 'incorrect'>('idle');
-  
-//   // Reset state when modal opens
-//   useEffect(() => {
-//     if (isVisible) {
-//       setCurrentIndex(0);
-//       setAnswerState('idle');
-//     }
-//   }, [isVisible]);
-
-//   const currentGame = gameSequence[currentIndex];
-//   const isLastGame = currentIndex === gameSequence.length - 1;
-
-//   const handleCorrect = () => {
-//     setAnswerState('correct');
-//     // Play a success sound effect here if you want
-//   };
-
-//   const handleIncorrect = () => {
-//     setAnswerState('incorrect');
-//     // Vibrate or play error sound
-//   };
-
-//   const handleContinue = () => {
-//     if (isLastGame) {
-//       onClose();
-//     } else {
-//       setAnswerState('idle');
-//       setCurrentIndex(prev => prev + 1);
-//     }
-//   };
-
-//   const renderCurrentGame = () => {
-//     switch (currentGame.type) {
-//       case 'fill':
-//         return <GameFillInTheBlanks data={currentGame.data as any} onCorrect={handleCorrect} onIncorrect={handleIncorrect} key={currentIndex} />;
-//       case 'match':
-//         return <GameMatchTheFollowing colA={(currentGame.data as any).colA} colB={(currentGame.data as any).colB} onComplete={handleCorrect} key={currentIndex} />;
-//       case 'speak':
-//         return <GameSpeechPractice data={currentGame.data as any} onComplete={handleCorrect} onSpeak={onSpeak} key={currentIndex} />;
-//       default:
-//         return null;
-//     }
-//   };
-
-//   return (
-//     <Modal visible={isVisible} animationType="slide" transparent={false}>
-//       <SafeAreaView style={styles.safeArea}>
-//         <View style={styles.header}>
-//           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-//             <Ionicons name="close" size={28} color="#94a3b8" />
-//           </TouchableOpacity>
-//           <ProgressBar current={currentIndex + (answerState === 'correct' ? 1 : 0)} total={gameSequence.length} />
-//         </View>
-
-//         <View style={styles.gameArea}>
-//           {renderCurrentGame()}
-//         </View>
-
-//         {/* Character positioned above bottom bar */}
-//         <View style={styles.characterArea}>
-//            {character}
-//         </View>
-
-//         {/* Feedback / Continue Bar */}
-//         {answerState !== 'idle' && (
-//           <View style={[styles.bottomBar, answerState === 'correct' ? styles.correctBar : styles.incorrectBar]}>
-//             <Text style={[styles.feedbackText, answerState === 'correct' ? styles.correctText : styles.incorrectText]}>
-//               {answerState === 'correct' ? 'Great job! 🎉' : 'Not quite right yet.'}
-//             </Text>
-//             <TouchableOpacity
-//               style={[styles.continueBtn, answerState === 'correct' ? styles.correctBtn : styles.incorrectBtn]}
-//               onPress={answerState === 'correct' ? handleContinue : () => setAnswerState('idle')}
-//             >
-//               <Text style={styles.continueBtnText}>
-//                 {answerState === 'correct' ? 'CONTINUE' : 'TRY AGAIN'}
-//               </Text>
-//             </TouchableOpacity>
-//           </View>
-//         )}
-//       </SafeAreaView>
-//     </Modal>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   safeArea: { flex: 1, backgroundColor: '#fff' },
-//   header: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
-//   closeBtn: { padding: 4 },
-//   progressTrack: { flex: 1, height: 16, backgroundColor: '#e2e8f0', borderRadius: 8, overflow: 'hidden' },
-//   progressFill: { height: '100%', backgroundColor: '#22c55e', borderRadius: 8 },
-//   gameArea: { flex: 1, padding: 20, justifyContent: 'center' },
-//   characterArea: { alignItems: 'center', marginBottom: 130 }, // Push up to avoid being covered by bottom bar
-//   bottomBar: { position: 'absolute', bottom: 0, width: '100%', padding: 24, borderTopWidth: 2, elevation: 10 },
-//   correctBar: { backgroundColor: '#dcfce7', borderTopColor: '#22c55e' },
-//   incorrectBar: { backgroundColor: '#fee2e2', borderTopColor: '#ef4444' },
-//   feedbackText: { fontSize: 22, fontWeight: 'bold', marginBottom: 16 },
-//   correctText: { color: '#15803d' },
-//   incorrectText: { color: '#b91c1c' },
-//   continueBtn: { paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
-//   correctBtn: { backgroundColor: '#22c55e' },
-//   incorrectBtn: { backgroundColor: '#ef4444' },
-//   continueBtnText: { color: 'white', fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
-// });
-
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Modal, TouchableOpacity, SafeAreaView } from "react-native";
+import { View, Text, StyleSheet, Modal, TouchableOpacity, SafeAreaView, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import {
-  fibData,
-  matchColA,
-  matchColB,
-  speechData,
-  mcqData,
-  trueFalseData,
-  sentenceOrderData,
-  dialogueData,
-  puzzleData,
-  CharacterDialogue,
-} from "./GameData";
+// Game Components
+import GameFillInTheBlanks from "./GameFillInTheBlanks";
 
-import GameFillInTheBlanks from "../Games/GameFillInTheBlanks";
-import GameMatchTheFollowing from "../Games/GameMatchTheFollowing";
-import GameSpeechPractice from "../Games/GameSpeechPractice";
-import GameMCQ from "../Games/GameMCQ";
-import GameTrueFalse from "../Games/GameTrueFalse";
-import GameSentenceOrder from "../Games/GameSentenceOrder";
-import GameDialogueMatch from "../Games/GameDialogueMatch";
-import GamePuzzle from "../Games/GamePuzzle";
+// API & Logic
+import { fetchGameData, GameType, adaptFillBlank, adaptMCQ, adaptJumbled } from "../../hooks/GameAPI";
 
 const ProgressBar = ({ current, total }: { current: number; total: number }) => (
   <View style={styles.progressTrack}>
@@ -173,60 +14,156 @@ const ProgressBar = ({ current, total }: { current: number; total: number }) => 
   </View>
 );
 
+interface GameContainerProps {
+  isVisible: boolean;
+  onClose: () => void;
+  character: React.ReactNode;
+  onSpeak: (text: string) => void;
+  simplifiedLines: string[]; // <--- Dynamic Input
+  language: string;
+}
+
+type GamePlanItem = {
+  type: GameType;
+  lines: string[];
+};
+
 export default function GameContainer({
   isVisible,
   onClose,
   character,
   onSpeak,
-}: any) {
-  const gameSequence = [
-    { type: "fill", data: fibData[0] },
-    { type: "speak", data: speechData[0] },
-    { type: "mcq", data: mcqData[0] },
-    { type: "match", data: { colA: matchColA, colB: matchColB } },
-    { type: "truefalse", data: trueFalseData[0] },
-    { type: "order", data: sentenceOrderData[0] },
-    { type: "dialogue", data: dialogueData },
-    { type: "puzzle", data: puzzleData[0] },
-  ];
+  simplifiedLines = [],
+  language = 'en'
+}: GameContainerProps) {
 
-  const [index, setIndex] = useState(0);
-  const [state, setState] = useState<"idle" | "correct" | "wrong">("idle");
+  // State
+  const [gamePlan, setGamePlan] = useState<GamePlanItem[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentGameData, setCurrentGameData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState<"idle" | "correct" | "wrong">("idle");
 
+  // 1. On Mount: Split Lines into 8 Games
   useEffect(() => {
-    if (isVisible) {
-      setIndex(0);
-      setState("idle");
+    if (isVisible && simplifiedLines.length > 0) {
+      const plan: GamePlanItem[] = [];
+      const totalGames = 8; // We want exactly 8 levels
+      
+      // Calculate how many lines per game
+      // If we have 20 lines, chunk size is approx 2 or 3
+      const chunkSize = Math.max(1, Math.ceil(simplifiedLines.length / totalGames));
+      
+      const availableTypes: GameType[] = ["fill", "mcq", "truefalse", "jumbled", "match"];
+      
+      for (let i = 0; i < simplifiedLines.length; i += chunkSize) {
+        // Slice the lines for this specific game
+        const chunk = simplifiedLines.slice(i, i + chunkSize);
+        
+        // Pick a game type (rotate through them)
+        const type = availableTypes[(plan.length) % availableTypes.length];
+        
+        plan.push({ type, lines: chunk });
+        
+        // Stop if we hit 8 games (even if lines are left over, or loop if needed)
+        if (plan.length === totalGames) break;
+      }
+      
+      setGamePlan(plan);
+      setCurrentIndex(0);
+      setStatus("idle");
     }
-  }, [isVisible]);
+  }, [isVisible, simplifiedLines]);
 
-  const next = () => {
-    if (index === gameSequence.length - 1) onClose();
-    else {
-      setIndex(i => i + 1);
-      setState("idle");
+  // 2. Fetch Data whenever Index Changes
+  useEffect(() => {
+    const loadLevel = async () => {
+      if (gamePlan.length === 0) return;
+      
+      setIsLoading(true);
+      const currentPlan = gamePlan[currentIndex];
+      
+      // Call Backend
+      const rawData = await fetchGameData(currentPlan.type, currentPlan.lines, language);
+      
+      if (rawData && rawData.length > 0) {
+        // We might get multiple questions for these lines, just pick the first one for now
+        // or loop through them. Let's pick the first one to keep UI simple.
+        setCurrentGameData(rawData[0]); 
+      } else {
+        // Fallback or Skip if API fails
+        console.warn("No data for game", currentPlan.type);
+        handleNext(); 
+      }
+      
+      setIsLoading(false);
+    };
+
+    loadLevel();
+  }, [currentIndex, gamePlan]);
+
+  // Logic to move next
+  const handleNext = () => {
+    if (currentIndex < gamePlan.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      setStatus("idle");
+      setCurrentGameData(null);
+    } else {
+      onClose(); // Finished all games
     }
   };
 
-  const renderGame = () => {
-    const g = gameSequence[index];
-    switch (g.type) {
+  // 3. Render the Correct Game Component
+  const renderGameContent = () => {
+    if (isLoading || !currentGameData) {
+      return <ActivityIndicator size="large" color="#22c55e" />;
+    }
+
+    const type = gamePlan[currentIndex].type;
+
+    switch (type) {
       case "fill":
-        return <GameFillInTheBlanks data={g.data as any} onCorrect={() => setState("correct")} onIncorrect={() => setState("wrong")} />;
-      case "match":
-        return <GameMatchTheFollowing colA={(g.data as any).colA} colB={(g.data as any).colB} onComplete={() => setState("correct")} />;
-      case "speak":
-        return <GameSpeechPractice data={g.data as any} onComplete={() => setState("correct")} onSpeak={onSpeak} />;
-      case "mcq":
-        return <GameMCQ data={g.data as any} onCorrect={() => setState("correct")} onIncorrect={() => setState("wrong")} />;
-      case "truefalse":
-        return <GameTrueFalse data={g.data as any} onCorrect={() => setState("correct")} onIncorrect={() => setState("wrong")} />;
-      case "order":
-        return <GameSentenceOrder data={g.data as any} onComplete={() => setState("correct")} />;
-      case "dialogue":
-            return <GameDialogueMatch key={index} data={g.data as CharacterDialogue[]} onComplete={() => setState("correct")}/>;
-      case "puzzle":
-        return <GamePuzzle data={g.data as any} onComplete={() => setState("correct")} />;
+        const fillProps = adaptFillBlank(currentGameData);
+        return (
+          <GameFillInTheBlanks 
+            data={fillProps} 
+            onCorrect={() => setStatus("correct")} 
+            onIncorrect={() => setStatus("wrong")} 
+          />
+        );
+      
+    //   case "mcq":
+    //     const mcqProps = adaptMCQ(currentGameData);
+    //     return (
+    //       // <GameMCQ 
+    //       //   data={mcqProps} 
+    //       //   onCorrect={() => setStatus("correct")} 
+    //       //   onIncorrect={() => setStatus("wrong")} 
+    //       // />
+    //     );
+
+    //   case "truefalse":
+    //     // Assuming backend returns { statement: "...", answer: "True" }
+    //     return (
+    //       <GameTrueFalse 
+    //         data={currentGameData} 
+    //         onCorrect={() => setStatus("correct")} 
+    //         onIncorrect={() => setStatus("wrong")} 
+    //       />
+    //     );
+
+    //   case "jumbled":
+    //     const jumbledProps = adaptJumbled(currentGameData);
+    //     return (
+    //       // <GameSentenceOrder 
+    //       //   data={jumbledProps} 
+    //       //   onComplete={() => setStatus("correct")} 
+    //       // />
+    //     );
+      
+    //   // Add other cases...
+    //   default:
+    //     return <Text>Game type not implemented yet</Text>;
     }
   };
 
@@ -237,16 +174,22 @@ export default function GameContainer({
           <TouchableOpacity onPress={onClose}>
             <Ionicons name="close" size={28} />
           </TouchableOpacity>
-          <ProgressBar current={index + 1} total={gameSequence.length} />
+          <ProgressBar current={currentIndex + 1} total={gamePlan.length || 1} />
         </View>
 
-        <View style={styles.game}>{renderGame()}</View>
+        <View style={styles.game}>
+           {renderGameContent()}
+        </View>
+
         <View style={styles.character}>{character}</View>
 
-        {state !== "idle" && (
-          <TouchableOpacity style={styles.bottom} onPress={state === "correct" ? next : () => setState("idle")}>
+        {status !== "idle" && (
+          <TouchableOpacity 
+            style={[styles.bottom, status === "wrong" ? styles.bgRed : styles.bgGreen]} 
+            onPress={status === "correct" ? handleNext : () => setStatus("idle")}
+          >
             <Text style={styles.bottomText}>
-              {state === "correct" ? "CONTINUE" : "TRY AGAIN"}
+              {status === "correct" ? "CONTINUE" : "TRY AGAIN"}
             </Text>
           </TouchableOpacity>
         )}
@@ -256,12 +199,14 @@ export default function GameContainer({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { flexDirection: "row", gap: 12, padding: 16 },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
+  header: { flexDirection: "row", gap: 12, padding: 16, alignItems: 'center' },
   progressTrack: { flex: 1, height: 12, backgroundColor: "#e5e7eb", borderRadius: 6 },
-  progressFill: { height: "100%", backgroundColor: "#22c55e" },
+  progressFill: { height: "100%", backgroundColor: "#22c55e", borderRadius: 6 },
   game: { flex: 1, padding: 20, justifyContent: "center" },
-  character: { alignItems: "center", marginBottom: 120 },
-  bottom: { padding: 20, backgroundColor: "#22c55e", alignItems: "center" },
+  character: { alignItems: "center", marginBottom: 100 },
+  bottom: { padding: 20, alignItems: "center", position: 'absolute', bottom: 0, width: '100%' },
+  bgGreen: { backgroundColor: "#22c55e" },
+  bgRed: { backgroundColor: "#ef4444" },
   bottomText: { color: "white", fontSize: 18, fontWeight: "bold" },
 });

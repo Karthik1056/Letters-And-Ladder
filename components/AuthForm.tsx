@@ -27,6 +27,7 @@ type AuthFormProps = {
   switchTextPart2: string;
   submitText: string;
   fontFamily?: string;
+  onForgotPassword?: (email: string) => void;
 };
 
 export default function AuthForm({
@@ -39,6 +40,7 @@ export default function AuthForm({
   switchTextPart2,
   submitText,
   fontFamily = 'CustomFont',
+  onForgotPassword,
 }: AuthFormProps) {
   WebBrowser.maybeCompleteAuthSession();
 
@@ -113,7 +115,7 @@ export default function AuthForm({
         </View>
 
         {!isSignUp && (
-            <TouchableOpacity style={styles.forgotPasswordContainer}>
+            <TouchableOpacity style={styles.forgotPasswordContainer} onPress={() => onForgotPassword && onForgotPassword(email)}>
                 <Text style={[styles.forgotPasswordText, fontFamily ? { fontFamily } : undefined]}>Forgot password?</Text>
             </TouchableOpacity>
         )}

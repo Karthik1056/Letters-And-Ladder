@@ -6,6 +6,7 @@ export default function ScreensLayout() {
     <Stack>
       <Stack.Screen name="MainPage" options={{ headerShown: true }} />
       <Stack.Screen name="SelectionPage" options={{ headerShown: true }} />
+      <Stack.Screen name="SelectionPage2" options={{ headerShown: true }} />
       <Stack.Screen name="ChapterList" options={{ headerShown: true }} />
       <Stack.Screen name="profile" options={{ headerShown: true }} />
       <Stack.Screen name="ChapterDetail" options={{ headerShown: true }} />

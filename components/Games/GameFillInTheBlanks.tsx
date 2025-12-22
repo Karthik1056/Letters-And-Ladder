@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown, BounceIn } from 'react-native-reanimated';
-import { FillInTheBlankQuestion } from './GameData';
+
+// Make sure this interface matches what adaptFillBlank returns
+export interface FillInTheBlankProps {
+  sentence: (string | null)[]; // ["The ", null, " is blue"]
+  options: string[];           // ["sky", "ground"]
+  correctWord: string;         // "sky"
+}
 
 interface Props {
-  data: FillInTheBlankQuestion;
+  data: FillInTheBlankProps;
   onCorrect: () => void;
   onIncorrect: () => void;
 }
@@ -13,6 +19,12 @@ export default function GameFillInTheBlanks({ data, onCorrect, onIncorrect }: Pr
   const [selected, setSelected] = useState<string | null>(null);
   const [hasChecked, setHasChecked] = useState(false);
 
+  // Reset local state when data changes (new game level)
+  useEffect(() => {
+    setSelected(null);
+    setHasChecked(false);
+  }, [data]);
+
   const handleCheck = () => {
     if (!selected) return;
     setHasChecked(true);
@@ -20,7 +32,6 @@ export default function GameFillInTheBlanks({ data, onCorrect, onIncorrect }: Pr
       onCorrect();
     } else {
       onIncorrect();
-      // Reset after a short delay so they can try again
       setTimeout(() => {
         setHasChecked(false);
         setSelected(null);
@@ -50,7 +61,7 @@ export default function GameFillInTheBlanks({ data, onCorrect, onIncorrect }: Pr
 
       <View style={styles.optionsContainer}>
         {data.options.map((opt, i) => (
-          <Animated.View key={opt} entering={FadeInDown.delay(i * 100)}>
+          <Animated.View key={`${opt}-${i}`} entering={FadeInDown.delay(i * 100)}>
             <TouchableOpacity
               style={[styles.option, selected === opt && styles.optionSelected]}
               onPress={() => setSelected(opt)}

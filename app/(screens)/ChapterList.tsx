@@ -23,6 +23,7 @@ export type Chapter = {
   className: string;
   boardName: string;
   textUrl: string;
+  language:string;
 };
 // Removed the unused 'chapterList' interface
 
@@ -89,7 +90,8 @@ export default function ChapterList() {
             subject: item.subject,
             className: item.className,
             boardName: item.boardName,
-            textUrl: item.textUrl, // Include textUrl
+            textUrl: item.textUrl, // Include textUrl,
+            language:item.language
           }))
           .sort((a, b) => a.lessonNumber - b.lessonNumber); // Sort by lesson number
 
@@ -124,6 +126,7 @@ export default function ChapterList() {
         subject: chapter.subject,
         className: chapter.className,
         boardName: chapter.boardName,
+        language:chapter.language
       }
     });
   };

@@ -16,10 +16,10 @@ import { fetchClassesByBoardName, ClassItem } from "@/Services/Class/Service"; /
 import { updateUserInfo, getUserInfo ,initializeUserProgress, getUserProgress} from "@/Services/User/UserService"; // Adjust path
 import AnimatedBackground from "../../components/AnimatedBackground";
 import { db } from "../../firebaseConfig";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, collection, query, where, getCountFromServer } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 
-export default function SelectionPage() {
+export default function SelectionPage2() {
   const router = useRouter();
   const { user, updateUser } = useAuth();
 
@@ -89,54 +89,77 @@ export default function SelectionPage() {
     if (selectedBoardName && selectedClassId && selectedSubjects.length > 0) {
       const selectedClassObject = classes.find(c => c.id === selectedClassId);
       if (selectedClassObject) {
-        const subjectStatus: Record<string, boolean> = {};
-        subjects.forEach((subj) => (subjectStatus[subj] = false));
-        selectedSubjects.forEach((subj) => (subjectStatus[subj] = true));
-        
-        updateUserInfo({
-          boardName: selectedBoardName,
-          className: selectedClassObject.name,
-          selectedSubjects: subjectStatus,
-        }).then(async () => {
+        getUserInfo().then(async (userData) => {
+          const existing = userData?.selectedSubjects || {};
+          const subjectStatus = { ...existing };
+          selectedSubjects.forEach((subj) => subjectStatus[subj] = true);
+          
+          // Update user info
+          await updateUserInfo({
+            boardName: selectedBoardName,
+            className: selectedClassObject.name,
+            selectedSubjects: subjectStatus,
+          });
+
           // Update context
           updateUser({
             boardName: selectedBoardName,
             className: selectedClassObject.name,
             selectedSubjects: subjectStatus,
           });
-          
-          // Update UserProgress to remove deselected subjects
+
+          // Update UserProgress to include new subjects
           const progressData = await getUserProgress();
           if (progressData) {
-            const updatedSubjects = { ...progressData.subjects };
-            Object.keys(updatedSubjects).forEach(subj => {
-              if (!subjectStatus[subj]) {
-                delete updatedSubjects[subj];
-              }
-            });
-            
-            // Update UserProgress in Firestore
-            const progressDocRef = doc(db, "UserProgress", progressData.userId);
-            await updateDoc(progressDocRef, { subjects: updatedSubjects });
+            const newSubjects = selectedSubjects.filter(subj => !progressData.subjects[subj]);
+            if (newSubjects.length > 0) {
+              // Add new subjects to progress
+              const updatedSubjects = { ...progressData.subjects };
+              await Promise.all(newSubjects.map(async (subj) => {
+                try {
+                  const chaptersRef = collection(db, "Chapters");
+                  const q = query(
+                    chaptersRef,
+                    where("boardName", "==", selectedBoardName),
+                    where("className", "==", selectedClassObject.name),
+                    where("subject", "==", subj)
+                  );
+                  const snapshot = await getCountFromServer(q);
+                  const totalCount = snapshot.data().count;
+                  updatedSubjects[subj] = {
+                    totalLessons: totalCount,
+                    completedLessons: 0,
+                    percentage: 0
+                  };
+                } catch (error) {
+                  console.error(`Error counting chapters for ${subj}:`, error);
+                  updatedSubjects[subj] = { totalLessons: 0, completedLessons: 0, percentage: 0 };
+                }
+              }));
+              
+              // Update UserProgress in Firestore
+              const progressDocRef = doc(db, "UserProgress", progressData.userId);
+              await updateDoc(progressDocRef, { subjects: updatedSubjects });
+            }
           }
-        }).catch(err => console.error("updateUserInfo error:", err));
+        }).catch(err => console.error("Error updating user info and progress:", err));
       }
     }
-  }, [selectedSubjects, selectedBoardName, selectedClassId, classes, subjects]);
+  }, [selectedSubjects, selectedBoardName, selectedClassId, classes]);
 
   // 🔹 Handle class selection
   const handleClassSelect = (classId: string) => {
     setSelectedClassId(classId);
     const selected = classes.find((c) => c.id === classId);
     setSubjects(selected ? selected.subjects : []);
-    setSelectedSubjects([]); // **FIX: Reset array**
+    setSelectedSubjects([]); // Reset array
 
-    // Load previous selections for this class
+    // Filter out already selected subjects
     if (selected) {
       getUserInfo().then(userData => {
-        if (userData && userData.boardName === selectedBoardName && userData.className === selected.name && userData.selectedSubjects) {
-          const previousSelected = Object.keys(userData.selectedSubjects).filter(key => userData.selectedSubjects[key]);
-          setSelectedSubjects(previousSelected);
+        if (userData && userData.selectedSubjects) {
+          const alreadySelected = Object.keys(userData.selectedSubjects).filter(key => userData.selectedSubjects[key]);
+          setSubjects(prev => prev.filter(subj => !alreadySelected.includes(subj)));
         }
       }).catch(err => console.error("Failed to load previous selections:", err));
     }
@@ -168,7 +191,6 @@ export default function SelectionPage() {
          return;
     }
 
-    await initializeUserProgress();
 
     const subjectsParam = selectedSubjects.join(',');
 

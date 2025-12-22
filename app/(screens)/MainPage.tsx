@@ -214,9 +214,9 @@ export default function MainPage() {
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <Animated.Text style={[styles.sectionTitle, titleStyle]}>Your Subjects</Animated.Text>
 
-          <TouchableOpacity onPress={() => router.push('/profile')} style={styles.profileButton}>
+          {/* <TouchableOpacity onPress={() => router.push('/profile')} style={styles.profileButton}>
             <Ionicons name="person-circle" size={40} color="#fff" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {selectedSubjects.length > 0 ? (
             selectedSubjects.map((subject, index) => (

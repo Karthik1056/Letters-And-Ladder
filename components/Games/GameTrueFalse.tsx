@@ -1,63 +1,161 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { TrueFalseQuestion } from "./GameData";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-interface Props {
-  data: TrueFalseQuestion;
+interface Question {
+  id: number;
+  // Make these optional so we can check which one exists
+  statement?: string;       
+  question?: string;
+  original_sentence?: string;
+  correct_answer: string;
+  options: string[];
+}
+
+interface GameTrueFalseProps {
+  data: {
+    questions: Question[];
+  };
   onCorrect: () => void;
   onIncorrect: () => void;
 }
 
-export default function GameTrueFalse({ data, onCorrect, onIncorrect }: Props) {
-  const [locked, setLocked] = useState(false);
+export default function GameTrueFalse({ data, onCorrect, onIncorrect }: GameTrueFalseProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  
+  const questions = data.questions || [];
+  const currentQuestion = questions[currentIndex];
 
-  // 🔑 RESET WHEN QUESTION CHANGES
-  useEffect(() => {
-    setLocked(false);
-  }, [data.id]);
+  if (!currentQuestion) return <Text>Loading Question...</Text>;
 
-  const handleAnswer = (value: boolean) => {
-    if (locked) return;
-    setLocked(true);
+  // --- FIX: Check multiple keys for the text ---
+  const questionText = currentQuestion.statement 
+                    || currentQuestion.question 
+                    || currentQuestion.original_sentence 
+                    || "Question text missing";
 
-    value === data.answer ? onCorrect() : onIncorrect();
+  const handleAnswer = (option: string) => {
+    setSelectedOption(option);
+
+    const isCorrect = option === currentQuestion.correct_answer;
+
+    if (isCorrect) {
+      setTimeout(() => {
+        if (currentIndex < questions.length - 1) {
+          setCurrentIndex((prev) => prev + 1);
+          setSelectedOption(null);
+        } else {
+          onCorrect();
+        }
+      }, 800);
+    } else {
+      onIncorrect();
+      // Unlock buttons after 1 second so user can retry
+      setTimeout(() => {
+        setSelectedOption(null); 
+      }, 1000);
+    }
+  };
+
+  const getButtonStyle = (option: string) => {
+    if (selectedOption === option) {
+      return option === currentQuestion.correct_answer 
+        ? styles.correctButton 
+        : styles.wrongButton;
+    }
+    return styles.defaultButton;
   };
 
   return (
-    <View>
-      <Text style={styles.statement}>{data.statement}</Text>
+    <View style={styles.container}>
+      <Text style={styles.counter}>
+        Question {currentIndex + 1} of {questions.length}
+      </Text>
 
-      <View style={styles.row}>
-        <TouchableOpacity
-          style={[styles.btn, styles.trueBtn]}
-          onPress={() => handleAnswer(true)}
-          disabled={locked}
-        >
-          <Text style={styles.text}>TRUE</Text>
-        </TouchableOpacity>
+      <View style={styles.card}>
+        {/* Use the safe questionText variable */}
+        <Text style={styles.statementText}>{questionText}</Text>
+      </View>
 
-        <TouchableOpacity
-          style={[styles.btn, styles.falseBtn]}
-          onPress={() => handleAnswer(false)}
-          disabled={locked}
-        >
-          <Text style={styles.text}>FALSE</Text>
-        </TouchableOpacity>
+      <View style={styles.optionsContainer}>
+        {["True", "False"].map((option) => (
+          <TouchableOpacity
+            key={option}
+            style={[styles.optionButton, getButtonStyle(option)]}
+            onPress={() => handleAnswer(option)}
+            disabled={selectedOption !== null} 
+          >
+            <Ionicons 
+              name={option === "True" ? "checkmark-circle-outline" : "close-circle-outline"} 
+              size={24} 
+              color="white" 
+              style={{ marginRight: 8 }}
+            />
+            <Text style={styles.optionText}>{option}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  statement: { fontSize: 24, fontWeight: "bold", marginBottom: 40 },
-  row: { flexDirection: "row", gap: 20 },
-  btn: {
-    flex: 1,
-    padding: 20,
-    borderRadius: 16,
+  container: {
+    width: "100%",
     alignItems: "center",
   },
-  trueBtn: { backgroundColor: "#22c55e" },
-  falseBtn: { backgroundColor: "#ef4444" },
-  text: { color: "white", fontSize: 18, fontWeight: "bold" },
+  counter: {
+    fontSize: 14,
+    color: "#94a3b8",
+    marginBottom: 16,
+    fontWeight: "600",
+  },
+  card: {
+    backgroundColor: "white",
+    padding: 30,
+    borderRadius: 20,
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  statementText: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#334155",
+    textAlign: "center",
+    lineHeight: 32,
+  },
+  optionsContainer: {
+    flexDirection: "row",
+    gap: 15,
+    width: "100%",
+  },
+  optionButton: {
+    flex: 1,
+    flexDirection: "row",
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  defaultButton: {
+    backgroundColor: "#3b82f6", 
+  },
+  correctButton: {
+    backgroundColor: "#22c55e", 
+  },
+  wrongButton: {
+    backgroundColor: "#ef4444", 
+  },
+  optionText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
 });

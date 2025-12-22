@@ -1,12 +1,18 @@
+
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Modal, TouchableOpacity, SafeAreaView, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-// Game Components
 import GameFillInTheBlanks from "./GameFillInTheBlanks";
+import GameMCQ from "./GameMCQ";
+import GameMatchFollowing from "./GameMatchTheFollowing";
+import GameTrueFalse from "./GameTrueFalse";
+import GameSentenceOrder from "./GameSentenceOrder";
+import GameMissingLetters from "./GameMissingLetters"
+import GameSpeech from "./GameSpeechPractice";
 
-// API & Logic
-import { fetchGameData, GameType, adaptFillBlank, adaptMCQ, adaptJumbled } from "../../hooks/GameAPI";
+
+import { fetchGameData, GameType, adaptFillBlank, adaptMCQ, adaptJumbled, adaptMatch, adaptTrueFalse, adaptMissingLetters,adaptSpeech } from "../../hooks/GameAPI";
 
 const ProgressBar = ({ current, total }: { current: number; total: number }) => (
   <View style={styles.progressTrack}>
@@ -19,7 +25,7 @@ interface GameContainerProps {
   onClose: () => void;
   character: React.ReactNode;
   onSpeak: (text: string) => void;
-  simplifiedLines: string[]; // <--- Dynamic Input
+  simplifiedLines: string[];
   language: string;
 }
 
@@ -34,7 +40,7 @@ export default function GameContainer({
   character,
   onSpeak,
   simplifiedLines = [],
-  language = 'en'
+  language
 }: GameContainerProps) {
 
   // State
@@ -44,65 +50,67 @@ export default function GameContainer({
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "correct" | "wrong">("idle");
 
+  // --- LANGUAGE CONVERSION LOGIC ---
+  const backendLanguage = language.includes('-') ? language.split('-')[0] : language;
+
+  useEffect(() => {
+    console.log("Backend Language Code:", backendLanguage);
+  }, [backendLanguage])
+
   // 1. On Mount: Split Lines into 8 Games
   useEffect(() => {
     if (isVisible && simplifiedLines.length > 0) {
       const plan: GamePlanItem[] = [];
-      const totalGames = 8; // We want exactly 8 levels
-      
-      // Calculate how many lines per game
-      // If we have 20 lines, chunk size is approx 2 or 3
+      const totalGames = 8;
+
       const chunkSize = Math.max(1, Math.ceil(simplifiedLines.length / totalGames));
-      
-      const availableTypes: GameType[] = ["fill", "mcq", "truefalse", "jumbled", "match"];
-      
+
+      const availableTypes: GameType[] = ["fill", "mcq", "match", "truefalse", "jumbled", "missing", "speech"];
+
       for (let i = 0; i < simplifiedLines.length; i += chunkSize) {
-        // Slice the lines for this specific game
         const chunk = simplifiedLines.slice(i, i + chunkSize);
-        
-        // Pick a game type (rotate through them)
         const type = availableTypes[(plan.length) % availableTypes.length];
-        
         plan.push({ type, lines: chunk });
-        
-        // Stop if we hit 8 games (even if lines are left over, or loop if needed)
+
         if (plan.length === totalGames) break;
       }
-      
+
       setGamePlan(plan);
       setCurrentIndex(0);
       setStatus("idle");
     }
   }, [isVisible, simplifiedLines]);
 
-  // 2. Fetch Data whenever Index Changes
   useEffect(() => {
     const loadLevel = async () => {
       if (gamePlan.length === 0) return;
-      
+
       setIsLoading(true);
       const currentPlan = gamePlan[currentIndex];
-      
-      // Call Backend
-      const rawData = await fetchGameData(currentPlan.type, currentPlan.lines, language);
-      
+
+      console.log(`[DEBUG] Requesting ${currentPlan.type}...`);
+
+      const rawData = await fetchGameData(currentPlan.type, currentPlan.lines, backendLanguage);
+
+      console.log("====================================");
+      console.log(`[BACKEND RESPONSE] Game Type: ${currentPlan.type}`);
+      console.log(JSON.stringify(rawData, null, 2));
+      console.log("====================================");
+      // ------------------------------------------
+
       if (rawData && rawData.length > 0) {
-        // We might get multiple questions for these lines, just pick the first one for now
-        // or loop through them. Let's pick the first one to keep UI simple.
-        setCurrentGameData(rawData[0]); 
+        setCurrentGameData(rawData[0]);
       } else {
-        // Fallback or Skip if API fails
         console.warn("No data for game", currentPlan.type);
-        handleNext(); 
+        handleNext();
       }
-      
+
       setIsLoading(false);
     };
 
     loadLevel();
   }, [currentIndex, gamePlan]);
 
-  // Logic to move next
   const handleNext = () => {
     if (currentIndex < gamePlan.length - 1) {
       setCurrentIndex(prev => prev + 1);
@@ -125,45 +133,78 @@ export default function GameContainer({
       case "fill":
         const fillProps = adaptFillBlank(currentGameData);
         return (
-          <GameFillInTheBlanks 
-            data={fillProps} 
-            onCorrect={() => setStatus("correct")} 
-            onIncorrect={() => setStatus("wrong")} 
+          <GameFillInTheBlanks
+            data={fillProps}
+            onCorrect={() => setStatus("correct")}
+            onIncorrect={() => setStatus("wrong")}
           />
         );
-      
-    //   case "mcq":
-    //     const mcqProps = adaptMCQ(currentGameData);
-    //     return (
-    //       // <GameMCQ 
-    //       //   data={mcqProps} 
-    //       //   onCorrect={() => setStatus("correct")} 
-    //       //   onIncorrect={() => setStatus("wrong")} 
-    //       // />
-    //     );
 
-    //   case "truefalse":
-    //     // Assuming backend returns { statement: "...", answer: "True" }
-    //     return (
-    //       <GameTrueFalse 
-    //         data={currentGameData} 
-    //         onCorrect={() => setStatus("correct")} 
-    //         onIncorrect={() => setStatus("wrong")} 
-    //       />
-    //     );
+      case "mcq":
+        const mcqProps = adaptMCQ(currentGameData);
+        return (
+          <GameMCQ
+            data={mcqProps}
+            onCorrect={() => setStatus("correct")}
+            onIncorrect={() => setStatus("wrong")}
+          />
+        );
 
-    //   case "jumbled":
-    //     const jumbledProps = adaptJumbled(currentGameData);
-    //     return (
-    //       // <GameSentenceOrder 
-    //       //   data={jumbledProps} 
-    //       //   onComplete={() => setStatus("correct")} 
-    //       // />
-    //     );
-      
-    //   // Add other cases...
-    //   default:
-    //     return <Text>Game type not implemented yet</Text>;
+      case "match":
+        const matchProps = adaptMatch(currentGameData);
+        return (
+          <GameMatchFollowing
+            data={matchProps}
+            onCorrect={() => setStatus("correct")}
+            onIncorrect={() => setStatus("wrong")}
+          />
+        );
+
+      // Inside renderGameContent switch
+      case "truefalse":
+        const tfProps = adaptTrueFalse(currentGameData);
+        return (
+          <GameTrueFalse
+            data={tfProps}
+            onCorrect={() => setStatus("correct")}
+            onIncorrect={() => setStatus("wrong")}
+          />
+        );
+
+      // Inside switch(type)
+      case "jumbled":
+        const jumbledProps = adaptJumbled(currentGameData);
+        return (
+          <GameSentenceOrder
+            data={jumbledProps}
+            onCorrect={() => setStatus("correct")}
+            onIncorrect={() => setStatus("wrong")}
+          />
+        );
+
+      // Inside switch(type)
+      case "missing":
+        const missingProps = adaptMissingLetters(currentGameData);
+        return (
+          <GameMissingLetters
+            data={missingProps}
+            onCorrect={() => setStatus("correct")}
+            onIncorrect={() => setStatus("wrong")}
+          />
+        );
+
+      case "speech":
+        const speechProps = adaptSpeech(currentGameData);
+        return (
+          <GameSpeech
+            data={speechProps}
+            onCorrect={() => setStatus("correct")}
+            onIncorrect={() => setStatus("wrong")}
+          />
+        );
+
+      default:
+        return <Text>Game type not implemented yet</Text>;
     }
   };
 
@@ -178,14 +219,14 @@ export default function GameContainer({
         </View>
 
         <View style={styles.game}>
-           {renderGameContent()}
+          {renderGameContent()}
         </View>
 
         <View style={styles.character}>{character}</View>
 
         {status !== "idle" && (
-          <TouchableOpacity 
-            style={[styles.bottom, status === "wrong" ? styles.bgRed : styles.bgGreen]} 
+          <TouchableOpacity
+            style={[styles.bottom, status === "wrong" ? styles.bgRed : styles.bgGreen]}
             onPress={status === "correct" ? handleNext : () => setStatus("idle")}
           >
             <Text style={styles.bottomText}>

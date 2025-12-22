@@ -101,8 +101,6 @@ export const changePassword = async (currentPassword: string, newPassword: strin
 }
 
 export const resetPassword = async (email: string): Promise<void> => {
-
-  
   if (!email) {
     throw new Error("Please enter your email address.");
   }

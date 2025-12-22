@@ -771,20 +771,23 @@ const AnimatedCharacter = ({ isSpeaking }: { isSpeaking: boolean }) => {
 };
 
 /* ---------- Content Parser ---------- */
+// Detects dialogue lines in ANY language (Unicode-safe)
+const isDialogueLine = (line: string): boolean => {
+  return /^\p{L}[\p{L}\s.'-]*:\s/u.test(line);
+};
+
 const parseLesson = (text: string) => {
-  const conversationRegex = /^.*:.*$/m;
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  const lines = text
+    .split("\n")
+    .map(l => l.trim())
+    .filter(Boolean);
 
-  if (lines.some(line => conversationRegex.test(line))) {
-    return lines.map(l => ({ type: "dialogue", content: l }));
-  }
-
-  const avgLen = lines.reduce((a, b) => a + b.length, 0) / lines.length;
-  if (avgLen < 40) {
-    return lines.map(l => ({ type: "poem", content: l }));
-  }
-
-  return text.split("\n\n").map(p => ({ type: "paragraph", content: p.trim() }));
+  return lines.map(line => {
+    if (isDialogueLine(line)) {
+      return { type: "dialogue", content: line };
+    }
+    return { type: "paragraph", content: line };
+  });
 };
 
 /* ====================================================================

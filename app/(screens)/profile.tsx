@@ -84,7 +84,7 @@ export default function ProfilePage() {
             {/* Edit Name Row */}
             <TouchableOpacity
               style={styles.actionRow}
-              onPress={() => router.push('/profile')}
+              onPress={() => router.push('/edit-profile')}
             >
               <View style={styles.actionLeft}>
                 <Ionicons name="person-outline" size={22} color="#475569" style={styles.actionIcon} />

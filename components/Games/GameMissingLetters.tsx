@@ -36,7 +36,7 @@ export default function GameMissingLetters({ data, onCorrect, onIncorrect }: Gam
 
   const handleAnswer = (option: string[]) => {
     setSelectedOption(option);
-    
+
     const isCorrect = areArraysEqual(option, currentQuestion.missing_chars);
 
     if (isCorrect) {
@@ -49,7 +49,13 @@ export default function GameMissingLetters({ data, onCorrect, onIncorrect }: Gam
         }
       }, 1000);
     } else {
-      onIncorrect();
+      onIncorrect(); // Trigger parent animation/sound
+
+      // --- ADD THIS TIMEOUT ---
+      // Wait 1 second to show the red color, then reset so user can try again
+      setTimeout(() => {
+        setSelectedOption(null);
+      }, 1000);
     }
   };
 
@@ -69,7 +75,7 @@ export default function GameMissingLetters({ data, onCorrect, onIncorrect }: Gam
     // We split by '_' to find positions, but we need to reconstruct visually
     // A simpler approach for visual logic:
     const parts = currentQuestion.masked_word.split('_');
-    
+
     return (
       <View style={styles.wordContainer}>
         {parts.map((part, index) => (
@@ -78,7 +84,7 @@ export default function GameMissingLetters({ data, onCorrect, onIncorrect }: Gam
             {index < parts.length - 1 && (
               <View style={styles.blankSpace}>
                 <Text style={[
-                  styles.filledLetter, 
+                  styles.filledLetter,
                   selectedOption ? { color: '#2563eb' } : { color: '#94a3b8' }
                 ]}>
                   {/* If user selected an option, show that letter. Otherwise show '?' or empty */}

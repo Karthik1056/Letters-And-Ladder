@@ -135,24 +135,18 @@ export default function MainPage() {
 
   useEffect(() => {
     const loadSelectedSubjects = async () => {
-      try {
+      if (user && user.selectedSubjects) {
+        const subjects = Object.keys(user.selectedSubjects || {}).filter(key => user.selectedSubjects?.[key]);
+        setSelectedSubjects(subjects);
+
         const progressData = await getUserProgress();
+        const newProgressMap: Record<string, number> = {};
 
-        if (progressData && progressData.subjects) {
-          const subjects = Object.keys(progressData.subjects);
-          setSelectedSubjects(subjects);
+        subjects.forEach((subject) => {
+          newProgressMap[subject] = progressData?.subjects?.[subject]?.percentage || 0;
+        });
 
-          const newProgressMap: Record<string, number> = {};
-
-          subjects.forEach((subject) => {
-            newProgressMap[subject] = progressData.subjects[subject].percentage || 0;
-          });
-
-          setProgressMap(newProgressMap);
-        }
-      } catch (error) {
-        console.error('Error loading user progress:', error);
-        Alert.alert('Error', 'Could not load your progress.');
+        setProgressMap(newProgressMap);
       }
     };
 
@@ -202,7 +196,7 @@ export default function MainPage() {
             headerBackground: () => (
               <LinearGradient colors={['#3b82f6', '#60a5fa']} style={styles.headerBackground} />
             ),
-            headerRight: () => (
+            headerLeft: () => (
               // Assuming profile is also in the (screens) group
               <TouchableOpacity onPress={() => router.push('/profile')} style={styles.profileButton}>
                 <Ionicons name="person-circle" size={40} color="#fff" />
@@ -213,10 +207,6 @@ export default function MainPage() {
 
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <Animated.Text style={[styles.sectionTitle, titleStyle]}>Your Subjects</Animated.Text>
-
-          {/* <TouchableOpacity onPress={() => router.push('/profile')} style={styles.profileButton}>
-            <Ionicons name="person-circle" size={40} color="#fff" />
-          </TouchableOpacity> */}
 
           {selectedSubjects.length > 0 ? (
             selectedSubjects.map((subject, index) => (
@@ -242,7 +232,7 @@ export default function MainPage() {
 
         <Animated.View style={[styles.buttonWrapper, buttonStyle]}>
           <TouchableOpacity
-            onPress={() => router.push('/SelectionPage')}
+            onPress={() => router.push('/SelectionPage2')}
             onPressIn={() => (buttonScale.value = withSpring(0.98))}
             onPressOut={() => (buttonScale.value = withSpring(1))}
             activeOpacity={1}
@@ -268,6 +258,7 @@ const styles = StyleSheet.create({
   profileButton: {
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: 16,
   },
   scrollContainer: {
     paddingHorizontal: 24,
